@@ -53,7 +53,7 @@ module AccessRouter
         }
         accessNet: AccessNet {
             parameters:
-                @display("p=330,60");
+                @display("p=330,60;i=block/cogwheeli");
         }
         networkLayer: NetworkLayer {
             parameters:

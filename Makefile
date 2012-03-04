@@ -1,13 +1,4 @@
 INETDIR = `pwd`/../../inetmanet-2.0
-REASEDIR = `pwd`/../../ReaSE
-
-BUILD_OPTIONS = -f --deep -linet -O out --make-so -o OverSim $(DEFS)  -I$(INETDIR)/src/networklayer/autorouting/ipv4 -I$(INETDIR)/src/transport/tcp -I$(INETDIR)/src/transport/tcp_common -I$(INETDIR)/src/applications/pingapp -I$(INETDIR)/src/networklayer/mpls -I$(INETDIR)/src/networklayer/ipv4 -I$(INETDIR)/src/linklayer/contract -I$(INETDIR)/src/linklayer/mfcore -I$(INETDIR)/src/networklayer/ldp -I$(INETDIR)/src/networklayer/ipv6 -I$(INETDIR)/src/networklayer/arp -I$(INETDIR)/src/networklayer/autorouting -I$(INETDIR)/src/applications/udpapp -I$(INETDIR)/src/networklayer/ted -I$(INETDIR)/src/networklayer/rsvp_te -I$(INETDIR)/src/util/headerserializers -I$(INETDIR)/src/networklayer/contract -I$(INETDIR)/src/transport/contract -I$(INETDIR)/src/networklayer/common -I$(INETDIR)/src/transport/sctp -I$(INETDIR)/src/transport/udp -I$(INETDIR)/src/base -I$(INETDIR)/src/networklayer/icmpv6 -I$(INETDIR)/src/world -I$(INETDIR)/src/util -L$(INETDIR)/src -L/usr/lib
-
-ifeq "$(REASE)" "true"
-	BUILD_OPTIONS += -lrease -L$(REASEDIR)/src -KINET_PROJ=$(INETDIR) -KREASE_PROJ=$(REASEDIR)
-endif
-
-BUILD_OPTIONS += -- -lgmp
 
 all: makefiles
 	cd src && $(MAKE)
@@ -20,7 +11,7 @@ cleanall:
 	cd src && $(MAKE) MODE=debug clean
 
 makefiles:
-	cd src && opp_makemake $(BUILD_OPTIONS)
+	cd src && opp_makemake -f --deep -linet -O out -o OverSimDenaCast $(DEFS) -I$(INETDIR)/src/networklayer/contract -I$(INETDIR)/src/transport/tcp -I$(INETDIR)/src/applications/pingapp -I$(INETDIR)/src/networklayer/mpls -I$(INETDIR)/src/networklayer/ipv4 -I$(INETDIR)/src/linklayer/contract -I$(INETDIR)/src/linklayer/mfcore -I$(INETDIR)/src/networklayer/ldp -I$(INETDIR)/src/networklayer/ipv6 -I$(INETDIR)/src/networklayer/arp -I$(INETDIR)/src/applications/udpapp -I$(INETDIR)/src/networklayer/ted -I$(INETDIR)/src/networklayer/rsvp_te -I$(INETDIR)/src/util/headerserializers -I$(INETDIR)/src/networklayer/contract -I$(INETDIR)/src/transport/contract -I$(INETDIR)/src/networklayer/common -I$(INETDIR)/src/transport/sctp -I$(INETDIR)/src/transport/udp -I$(INETDIR)/src/base -I$(INETDIR)/src/networklayer/icmpv6 -I$(INETDIR)/src/world -I$(INETDIR)/src/util -L$(INETDIR)/src -L/usr/lib -KINET_PROJ=$(INETDIR) -- -lgmp
 
 doxy:
 	doxygen doxy.cfg
@@ -49,3 +40,4 @@ dist: makefiles
 	
 
 	
+

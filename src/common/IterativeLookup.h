@@ -128,7 +128,7 @@ protected:
     bool appLookup;
     SimTime startTime;              /**< time at which the lookup was started */
 
-public://virtual methods: comparator induced by distance in BaseOverlay
+protected://virtual methods: comparator induced by distance in BaseOverlay
     /**
      * compares two OverlayKeys and indicates which one is
      * closer to the key to look up
@@ -220,7 +220,6 @@ protected://fields and classes: rpc distribution
     {
     public:
         int vrpcId;
-        uint8_t proxVectorId;
         IterativePathLookup* path;
     };
 
@@ -234,11 +233,11 @@ protected://fields and classes: rpc distribution
     RpcInfoMap rpcs;
 
 protected://methods: rpcListener
-    virtual void handleRpcResponse(BaseResponseMessage* msg,
+    void handleRpcResponse(BaseResponseMessage* msg,
                            cPolymorphic* context,
                            int rpcId, simtime_t rtt);
 
-    virtual void handleRpcTimeout(BaseCallMessage* msg,
+    void handleRpcTimeout(BaseCallMessage* msg,
                           const TransportAddress& dest,
                           cPolymorphic* context, int rpcId,
                           const OverlayKey& destKey = OverlayKey::UNSPECIFIED_KEY);

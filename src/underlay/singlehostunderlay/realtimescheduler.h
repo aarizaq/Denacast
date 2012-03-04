@@ -25,10 +25,10 @@
 #define __REALTIMESCHEDULER_H__
 
 #define WANT_WINSOCK2
-#include <list>
-#include <climits>
 #include <platdep/sockets.h>
 #include <omnetpp.h>
+#include <list>
+#include <climits>
 
 /** This class implements a event scheduler for OMNeT++
  *  It makes the simulation run in realtime (i.e. 1 simsec == 1 sec)

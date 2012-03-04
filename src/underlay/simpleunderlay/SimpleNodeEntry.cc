@@ -26,10 +26,10 @@
 
 #include "SimpleNodeEntry.h"
 #include "SimpleUDP.h"
-#include "SimpleTCP.h"
 #include "SHA1.h"
 #include "OverlayKey.h"
 #include "BinaryValue.h"
+
 
 
 uint8_t NodeRecord::dim;
@@ -69,14 +69,7 @@ SimpleNodeEntry::SimpleNodeEntry(cModule* node,
                                  uint32_t fieldSize)
 {
     assert(NodeRecord::dim == 2);
-    cModule* udpModule = node->getSubmodule("udp");
-    UdpIPv4ingate = udpModule->gate("ipIn");
-    UdpIPv6ingate = udpModule->gate("ipv6In");
-    cModule* tcpModule = node->getSubmodule("tcp", 0);
-    if (tcpModule) {
-        TcpIPv4ingate = tcpModule->gate("ipIn");
-        TcpIPv6ingate = tcpModule->gate("ipv6In");
-    }
+    ingate = node->getSubmodule("udp")->gate("network_in");
 
     nodeRecord = new NodeRecord;
     index = -1;
@@ -110,14 +103,7 @@ SimpleNodeEntry::SimpleNodeEntry(cModule* node,
                                  uint32_t sendQueueLength,
                                  NodeRecord* nodeRecord, int index)
 {
-    cModule* udpModule = node->getSubmodule("udp");
-    UdpIPv4ingate = udpModule->gate("ipIn");
-    UdpIPv6ingate = udpModule->gate("ipv6In");
-    cModule* tcpModule = node->getSubmodule("tcp", 0);
-    if (tcpModule) {
-        TcpIPv4ingate = tcpModule->gate("ipIn");
-        TcpIPv6ingate = tcpModule->gate("ipv6In");
-    }
+    ingate = node->getSubmodule("udp")->gate("network_in");
 
     this->nodeRecord = nodeRecord;
     this->index = index;
@@ -151,7 +137,7 @@ float SimpleNodeEntry::operator-(const SimpleNodeEntry& entry) const
     return sqrt(sum_of_squares);
 }
 
-SimpleNodeEntry::SimpleDelay SimpleNodeEntry::calcDelay(cPacket* msg,
+SimpleNodeEntry::SimpleDelay SimpleNodeEntry::calcDelay(UDPPacket* msg,
                                                         const SimpleNodeEntry& dest,
                                                         bool faultyDelay)
 {
@@ -184,7 +170,7 @@ SimpleNodeEntry::SimpleDelay SimpleNodeEntry::calcDelay(cPacket* msg,
     simtime_t destBandwidthDelay = (msg->getByteLength() * 8) / dest.rx.bandwidth;
     simtime_t coordDelay = 0.001 * (*this - dest);
 
-    if (faultyDelay)
+    if (faultyDelay /*&& SimpleUDP::delayFaultTypeString.length() > 0*/)
         coordDelay = getFaultyDelay(coordDelay);
 
     return SimpleDelay(tx.finished - now

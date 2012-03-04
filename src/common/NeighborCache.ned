@@ -43,29 +43,25 @@ simple NeighborCache extends BaseApp
         bool doDiscovery;
 
         string ncsType;
-        bool ncsSendBackOwnCoords;
 
         //gnp settings
-        int gnpDimensions;
-        int gnpCoordCalcRuns;
-        double gnpLandmarkTimeout @unit(s);
+        int npsDimensions;
+        int npsCoordCalcRuns;
+        double landmarkTimeout @unit(s);
 
         //nps settings
         int npsMaxLayer;
 
         //vivaldi settings
-        bool vivaldiShowPosition;
+        bool showVivaldiPosition;
         double vivaldiErrorConst;
         double vivaldiCoordConst;
         double vivaldiDimConst;
         bool vivaldiEnableHeightVector;
 
         //svivaldi settings
-        double svivaldiLossConst;
-        double svivaldiLossResetLimit;
-        
-        //simpleNcs settings
-        string simpleNcsDelayFaultType;
+        double vivaldiLossConst;
+        double lossResetLimit;
 
         @display("i=block/table");
 }

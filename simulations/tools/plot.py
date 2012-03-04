@@ -41,7 +41,6 @@ parser.add_option("-e", "--exclude", type="string", action="append", help="Exclu
 parser.add_option("-c", "--confidence-intervall", type="float", default=0, dest="ci", help="Plots the confidence intervals with confidence level LEVEL", metavar="LEVEL")
 parser.add_option("-l", "--legend-position", type="int", default=0, dest="lpos", help="Position of the legend (default:auto)")
 parser.add_option("-s", "--scale", type="float", default=1, help="Scale y values by a factor of SCALE")
-parser.add_option("-S", "--offset", type="float", default=0, help="Add OFFSET to y values")
 parser.add_option("-o", "--outfile", help="Instead of displaying the plot, write a gnuplot-readable file to OUTFILE.dat and a gnuplot script to OUTFILE.plot.")
 parser.add_option("-x", "--xlabel", type="string", dest="xlabel", help="Label for the x-axis")
 parser.add_option("-y", "--ylabel", type="string", dest="ylabel", help="Label for the x-axis")
@@ -190,7 +189,7 @@ for run in sorted(valuemap.keys()):
         if options.ci > 0:
             bucketci = stats.stderr(bucketarray) * stats.t._ppf((1+options.ci)/2., len(bucketarray)) * options.scale
             ci[bucket] = bucketci
-        bucketmean = bucketmean*options.scale + options.offset
+        bucketmean*=options.scale
         row[bucket] = bucketmean
 
         if options.outfile:

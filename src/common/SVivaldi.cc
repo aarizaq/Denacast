@@ -32,8 +32,8 @@ void SVivaldi::init(NeighborCache* neighborCache)
 {
     Vivaldi::init(neighborCache);
 
-    lossC = neighborCache->par("svivaldiLossConst");
-    lossResetLimit =  neighborCache->par("svivaldiLossResetLimit");
+    lossC = neighborCache->par("vivaldiLossConst");
+    lossResetLimit =  neighborCache->par("lossResetLimit");
 
     loss = 0;
     WATCH(loss);

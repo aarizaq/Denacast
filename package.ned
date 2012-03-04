@@ -1,3 +1,3 @@
-package oversim_20101103;
+package oversimdenacast;
 
 @license(LGPL);

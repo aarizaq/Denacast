@@ -31,7 +31,6 @@
 #include <IPvXAddress.h>
 
 #include "UDPPacket_m.h"
-#include "TCPSegment.h"
 
 
 class NodeRecord
@@ -87,48 +86,17 @@ public:
      * @param nodeRecord the node's coordinates
      * @param index the position in unusedNodeRecords
      */
-    SimpleNodeEntry(cModule* node, cChannelType* typeRx, cChannelType* typeTx,
-                    uint32_t sendQueueLength, NodeRecord* nodeRecord,
-                    int index);
+    SimpleNodeEntry(cModule* node, cChannelType* typeRx, cChannelType* typeTx, uint32_t sendQueueLength,
+                    NodeRecord* nodeRecord, int index);
 
     /**
      * Getter for SimpleUDP ingate
      *
      * @return the ingate
      */
-    inline cGate* getUdpIPv4Gate() const
+    inline cGate* getGate() const
     {
-        return UdpIPv4ingate;
-    };
-
-    /**
-     * Getter for SimpleUDP IPv6 ingate
-     *
-     * @return the ingate
-     */
-    inline cGate* getUdpIPv6Gate() const
-    {
-        return UdpIPv6ingate;
-    };
-
-    /**
-     * Getter for SimpleUDP ingate
-     *
-     * @return the ingate
-     */
-    inline cGate* getTcpIPv4Gate() const
-    {
-        return TcpIPv4ingate;
-    };
-
-    /**
-     * Getter for SimpleUDP IPv6 ingate
-     *
-     * @return the ingate
-     */
-    inline cGate* getTcpIPv6Gate() const
-    {
-        return TcpIPv6ingate;
+        return ingate;
     };
 
     typedef std::pair<simtime_t, bool> SimpleDelay; //!< type for return value of calcDelay()
@@ -141,7 +109,7 @@ public:
      * @param faultyDelay violate triangle inequality?
      * @return delay in s and boolean value that is false if message should be deleted
      */
-    SimpleDelay calcDelay(cPacket* msg,
+    SimpleDelay calcDelay(UDPPacket* msg,
                           const SimpleNodeEntry& dest,
                           bool faultyDelay = false);
 
@@ -163,14 +131,9 @@ public:
 
     simtime_t getAccessDelay() const { return tx.accessDelay; };
 
-    simtime_t getTxAccessDelay() const { return tx.accessDelay; };
-    simtime_t getRxAccessDelay() const { return rx.accessDelay; };
-
     // typo fixed, thanks to huebby
-    float getBandwidth() const { return tx.bandwidth; };
-
-    float getTxBandwidth() const { return tx.bandwidth; };
-    float getRxBandwidth() const { return rx.bandwidth; };
+    float getUpBandwidth() const { return tx.bandwidth; };
+    float getDownBandwidth() const { return rx.bandwidth; };
 
     float getErrorRate() const { return tx.errorRate; };
 
@@ -193,17 +156,14 @@ public:
 protected:
 
     /**
-     * Calculates euclidean distance between two terminals
+     * Calculates eulklidean distance between two terminals
      *
      * @param entry destination entry
-     * @return the euclidean distance
+     * @return the euklidean distance
      */
     float operator-(const SimpleNodeEntry& entry) const;
 
-    cGate* UdpIPv4ingate; //!< IPv4 ingate of the SimpleUDP module of this terminal
-    cGate* UdpIPv6ingate; //!< IPv6 ingate of the SimpleUDP module of this terminal
-    cGate* TcpIPv4ingate; //!< IPv4 ingate of the SimpleTCP module of this terminal
-    cGate* TcpIPv6ingate; //!< IPv6 ingate of the SimpleTCP module of this terminal
+    cGate* ingate; //!< ingate of the SimpleUDP module of this terminal
 
     struct Channel {
         simtime_t finished; //!< send queue finished

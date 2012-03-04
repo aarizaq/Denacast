@@ -29,14 +29,12 @@ const NodeHandle NodeHandle::UNSPECIFIED_NODE;
 
 std::ostream& operator<<(std::ostream& os, const NodeHandle& n)
 {
-    os << "IP addr and port: ";
     if (n.ip.isUnspecified()) {
         os << "<addr unspec> ";
     } else {
         os << n.ip << ":" << n.port << " ";
     }
 
-    os << "Key: ";
     if (n.key.isUnspecified()) {
         os << "<key unspec>";
     } else {

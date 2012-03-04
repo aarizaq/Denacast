@@ -37,36 +37,12 @@ class IPv4Route;
 class IPv6Route;
 
 /**
- * Structure to manipulate IPv6 addresses easily
- */
-struct IPv6Words
-{
-public:
-    uint32 d0, d1, d2, d3;
-
-    IPv6Words(IPvXAddress addr) {
-        const uint32* words = addr.words();
-        d0 = words[0];
-        d1 = words[1];
-        d2 = words[2];
-        d3 = words[3];
-    }
-
-    IPv6Words() {
-            d0 = 0;
-            d1 = 0;
-            d2 = 0;
-            d3 = 0;
-        }
-};
-
-/**
  * Information about a getNode(usually a router)
  */
 class NodeInfo
 {
 public:
-    IPvXAddress IPAddress; //!< the IP Address
+    IPvXAddress IPAddress; //!< the IP Address @todo -> IPvXAddress
     cModule* module; //!< pointer to node getModule(not this module)
     IInterfaceTable* interfaceTable; //!< pointer to interface table of this node
     IRoutingTable* routingTable; //!< pointer to routing table of this node
@@ -96,8 +72,7 @@ public:
     IInterfaceTable* remoteInterfaceTable; //!< pointer to remote interface table
     IPv4Route* remoteRoutingEntry; //!< pointer to remote routing table
     IPv4Route* routingEntry; //!< pointer to routing entry
-    IPv6Route* remoteIpv6RoutingEntry; //!< pointer to remote routing table
-    IPv6Route* ipv6routingEntry; //!< pointer to routing entry
+    cModule* WLANInterface; //!< pointer to PPP module
 };
 
 /**
@@ -135,7 +110,7 @@ public:
      * the overlay terminal vector.
      * (called by InetUnderlayConfigurator in stage MAX_STAGE_UNDERLAY)
      */
-    virtual IPvXAddress addOverlayNode(cModule* overlayNode, bool migrate = false);
+    virtual int addOverlayNode(cModule* overlayNode, bool migrate = false);
 
     /**
      * returns a random ID
@@ -171,9 +146,7 @@ protected:
 
     NodeInfo router; //!< this access router
     std::vector<TerminalInfo> overlayTerminal; //!< the terminals at this access router
-    std::vector<IPvXAddress> returnedIPs; //!< list of IP addresses wich are no longer in use
 
-    IPvXAddress getAssignedPrefix(IInterfaceTable* ift);
     /**
      * OMNeT number of init stages
      *
@@ -202,7 +175,6 @@ protected:
     virtual void updateDisplayString();
 
     uint32_t lastIP; //!< last assigned IP address
-    bool useIPv6; //!< IPv6 address usage
 
     std::vector<std::string> channelTypesRx; //!< vector of possible access channels (rx)
     std::string channelTypeRxStr; //!< the current active channel type (rx)

@@ -27,13 +27,13 @@
 
 uint8_t EuclideanNcsNodeInfo::dim;
 
-Prox EuclideanNcsNodeInfo::getDistance(const AbstractNcsNodeInfo& abstractInfo) const
+Prox GnpNpsCoordsInfo::getDistance(const AbstractNcsNodeInfo& abstractInfo) const
 {
-    if (!dynamic_cast<const EuclideanNcsNodeInfo*>(&abstractInfo)) {
+    if (!dynamic_cast<const GnpNpsCoordsInfo*>(&abstractInfo)) {
         return Prox::PROX_UNKNOWN;
     }
-    const EuclideanNcsNodeInfo& info =
-        *(static_cast<const EuclideanNcsNodeInfo*>(&abstractInfo));
+    const GnpNpsCoordsInfo& info =
+        *(static_cast<const GnpNpsCoordsInfo*>(&abstractInfo));
 
     double dist = 0.0;
 
@@ -58,8 +58,7 @@ bool GnpNpsCoordsInfo::update(const AbstractNcsNodeInfo& abstractInfo)
     return true;
 }
 
-GnpNpsCoordsInfo::operator std::vector<double>() const
-{
+GnpNpsCoordsInfo::operator std::vector<double>() const {
     std::vector<double> temp;
     for (uint8_t i = 0; i < coordinates.size(); ++i) {
         temp.push_back(coordinates[i]);
@@ -127,8 +126,7 @@ bool VivaldiCoordsInfo::update(const AbstractNcsNodeInfo& info)
     return false;
 }
 
-VivaldiCoordsInfo::operator std::vector<double>() const
-{
+VivaldiCoordsInfo::operator std::vector<double>() const {
     std::vector<double> temp;
     for (uint8_t i = 0; i < coordinates.size(); ++i) {
         temp.push_back(coordinates[i]);
@@ -154,40 +152,4 @@ std::ostream& operator<<(std::ostream& os, const VivaldiCoordsInfo& info)
         os << ", HeightVec = " << info.getHeightVector();
 
     return os;
-}
-
-
-Prox SimpleCoordsInfo::getDistance(const AbstractNcsNodeInfo& abstractInfo) const
-{
-    const SimpleCoordsInfo& temp =
-        dynamic_cast<const SimpleCoordsInfo&>(abstractInfo);
-
-    return Prox(2 * (accessDelay +
-                temp.getAccessDelay() +
-                EuclideanNcsNodeInfo::getDistance(abstractInfo)));
-}
-
-
-bool SimpleCoordsInfo::update(const AbstractNcsNodeInfo& abstractInfo)
-{
-    if (!dynamic_cast<const SimpleCoordsInfo*>(&abstractInfo)) return false;
-
-    const SimpleCoordsInfo& temp =
-        static_cast<const SimpleCoordsInfo&>(abstractInfo);
-
-    coordinates = temp.coordinates;
-
-    return true;
-}
-
-
-SimpleCoordsInfo::operator std::vector<double>() const
-{
-    std::vector<double> temp;
-    for (uint8_t i = 0; i < coordinates.size(); ++i) {
-        temp.push_back(coordinates[i]);
-    }
-    temp.push_back(SIMTIME_DBL(accessDelay));
-
-    return temp;
 }

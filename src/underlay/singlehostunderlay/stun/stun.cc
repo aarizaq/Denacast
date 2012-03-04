@@ -7,10 +7,11 @@
 #ifdef WIN32
 #include <winsock2.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <io.h>
 #include <time.h>
+#include <stdio.h>
 #else
+
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -2297,7 +2298,7 @@ stunOpenSocket( StunAddress4& dest, StunAddress4* mapAddr,
    }
 
    StunAddress4 mappedAddr = resp.mappedAddress.ipv4;
-   StunAddress4 changedAddr = resp.changedAddress.ipv4;
+   //StunAddress4 changedAddr = resp.changedAddress.ipv4;
 
    //clog << "--- stunOpenSocket --- " << endl;
    //clog << "\treq  id=" << req.id << endl;
@@ -2392,7 +2393,7 @@ stunOpenSocketPair( StunAddress4& dest, StunAddress4* mapAddr,
       }
 
       mappedAddr[i] = resp.mappedAddress.ipv4;
-      StunAddress4 changedAddr = resp.changedAddress.ipv4;
+      //StunAddress4 changedAddr = resp.changedAddress.ipv4;
    }
 
    if (verbose)

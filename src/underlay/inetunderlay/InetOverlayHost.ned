@@ -22,7 +22,6 @@ import inet.networklayer.common.InterfaceTable;
 import inet.networklayer.ipv4.RoutingTable;
 import inet.nodes.inet.NetworkLayer;
 import inet.transport.udp.UDP;
-import inet.transport.tcp.TCP;
 import oversim.common.BootstrapList;
 import oversim.common.CryptoModule;
 import oversim.common.IOverlay;
@@ -45,7 +44,7 @@ module InetOverlayHost
         int numTiers; // number of tiers
         string routingFile = default("");
         bool IPForward = default(false);
-        @display("bgb=537,472;i=device/wifilaptop_l;i2=block/circle_s");
+        @display("bgb=337,472;i=device/wifilaptop_l;i2=block/circle_s");
     gates:
         inout pppg[]; // gates from router
         inout ethg[]; // placeholder for zero-size vector
@@ -55,103 +54,87 @@ module InetOverlayHost
     submodules:
         notificationBoard: NotificationBoard {
             parameters:
-                @display("p=68,230");
+                @display("p=68,208");
         }
         interfaceTable: InterfaceTable {
             parameters:
-                @display("p=68,311");
+                @display("p=68,278");
         }
         routingTable: RoutingTable {
             parameters:
                 IPForward = IPForward; // true if ip packets should be forwarded
                 routerId = ""; // id of the router
                 routingFile = routingFile; // use predefined routing file if given
-                @display("p=68,397");
+                @display("p=68,348");
         }
         tier3: <tier3Type> like ITier {
             parameters:
-                @display("p=96,44");
+                @display("p=56,64");
         }
         tier2: <tier2Type> like ITier {
             parameters:
-                @display("p=197,65");
+                @display("p=139,80");
         }
         tier1: <tier1Type> like ITier {
             parameters:
-                @display("p=289,104");
+                @display("p=210,114");
         }
         overlay: <overlayType> like IOverlay {
             parameters:
-                @display("p=374,150");
+                @display("p=274,176");
         }
         udp: UDP {
             parameters:
-                @display("p=374,246");
-        }
-        tcp: TCP {
-            parameters:
-                @display("p=269,246");
+                @display("p=274,254");
         }
         networkLayer: NetworkLayer {
             parameters:
                 proxyARP = false; // sets proxy \ARP mode (replying to \ARP requests for the addresses for which a routing table entry exists)
-                @display("p=374,332;q=queue");
+                @display("p=274,332;q=queue");
             gates:
                 ifIn[sizeof(pppg)+sizeof(ethg)];
                 ifOut[sizeof(pppg)+sizeof(ethg)];
         }
         ppp[sizeof(pppg)]: PPPInterface {
             parameters:
-                @display("p=374,414,row,90;q=txQueue");
+                @display("p=274,414,row,90;q=txQueue");
         }
         neighborCache: NeighborCache {
             parameters:
-                @display("p=168,230");
+                @display("p=168,208");
         }
         bootstrapList: BootstrapList {
             parameters:
-                @display("p=168,311");
+                @display("p=168,280");
         }
         cryptoModule: CryptoModule {
             parameters:
-                @display("p=168,397");
+                @display("p=168,348");
         }
     connections allowunconnected:
         tier1.to_lowerTier --> overlay.appIn if numTiers>0;
         tier1.from_lowerTier <-- overlay.appOut if numTiers>0;
         tier1.udpOut --> udp.appIn++ if numTiers>0;
         udp.appOut++ --> tier1.udpIn if numTiers>0;
-        tier1.tcpOut --> tcp.appIn++ if numTiers>0;
-        tcp.appOut++ --> tier1.tcpIn if numTiers>0;
 
         tier2.to_lowerTier --> tier1.from_upperTier if numTiers > 1;
         tier2.from_lowerTier <-- tier1.to_upperTier if numTiers > 1;
         tier2.udpOut --> udp.appIn++ if numTiers>1;
         udp.appOut++ --> tier2.udpIn if numTiers>1;
-        tier2.tcpOut --> tcp.appIn++ if numTiers>1;
-        tcp.appOut++ --> tier2.tcpIn if numTiers>1;
 
         tier3.to_lowerTier --> tier2.from_upperTier if numTiers > 2;
         tier3.from_lowerTier <-- tier2.to_upperTier if numTiers > 2;
         tier3.udpOut --> udp.appIn++ if numTiers>2;
         udp.appOut++ --> tier3.udpIn if numTiers>2;
-        tier3.tcpOut --> tcp.appIn++ if numTiers>2;
-        tcp.appOut++ --> tier3.tcpIn if numTiers>2;
 
         overlay.udpOut --> udp.appIn++;
         overlay.udpIn <-- udp.appOut++;
-
-        overlay.tcpOut --> tcp.appIn++;
-        overlay.tcpIn <-- tcp.appOut++;
 
         bootstrapList.udpOut --> udp.appIn++;
         bootstrapList.udpIn <-- udp.appOut++;
 
         udp.ipOut --> networkLayer.udpIn;
         udp.ipIn <-- networkLayer.udpOut;
-
-        tcp.ipOut --> networkLayer.tcpIn;
-        tcp.ipIn <-- networkLayer.tcpOut;
 
         // connections to network outside
         for i=0..sizeof(pppg)-1 {

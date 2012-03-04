@@ -16,19 +16,18 @@
 
 package oversim.underlay.inetunderlay;
 
-import oversim.common.NeighborCache;
-import oversim.common.ITier;
-import oversim.common.IOverlay;
-import oversim.common.CryptoModule;
-import oversim.common.BootstrapList;
-import inet.transport.udp.UDP;
-import inet.transport.tcp.TCP;
-import inet.nodes.inet.NetworkLayer;
-import inet.networklayer.ipv4.RoutingTable;
-import inet.networklayer.common.InterfaceTable;
-import inet.linklayer.ppp.PPPInterface;
-import inet.linklayer.ethernet.EthernetInterface;
 import inet.base.NotificationBoard;
+import inet.linklayer.ethernet.EthernetInterface;
+import inet.linklayer.ppp.PPPInterface;
+import inet.networklayer.common.InterfaceTable;
+import inet.networklayer.ipv4.RoutingTable;
+import inet.nodes.inet.NetworkLayer;
+import inet.transport.udp.UDP;
+import oversim.common.BootstrapList;
+import oversim.common.CryptoModule;
+import oversim.common.IOverlay;
+import oversim.common.ITier;
+import oversim.common.NeighborCache;
 
 
 //
@@ -72,7 +71,7 @@ module OverlayAccessRouter
         }
         accessNet: AccessNet {
             parameters:
-                @display("p=76,402");
+                @display("p=76,402;i=block/cogwheeli");
         }
         tier3: <tier3Type> like ITier {
             parameters:
@@ -94,10 +93,6 @@ module OverlayAccessRouter
             parameters:
                 @display("p=290,262;i=block/transport");
         }
-        tcp: TCP {
-            parameters:
-                @display("p=230,262");
-        }
         networkLayer: NetworkLayer {
             parameters:
                 proxyARP = false;
@@ -112,7 +107,7 @@ module OverlayAccessRouter
         }
         eth[sizeof(ethg)]: EthernetInterface {
             parameters:
-                @display("p=240,414,row,110;q=queue;i=block/ifcard");
+                @display("p=286,268,row,110;q=queue;i=block/ifcard");
         }
         neighborCache: NeighborCache {
             parameters:
@@ -131,37 +126,25 @@ module OverlayAccessRouter
         tier1.from_lowerTier <-- overlay.appOut if numTiers>0;
         tier1.udpOut --> udp.appIn++ if numTiers>0;
         udp.appOut++ --> tier1.udpIn if numTiers>0;
-        tier1.tcpOut --> tcp.appIn++ if numTiers>0;
-        tcp.appOut++ --> tier1.tcpIn if numTiers>0;
 
         tier2.to_lowerTier --> tier1.from_upperTier if numTiers > 1;
         tier2.from_lowerTier <-- tier1.to_upperTier if numTiers > 1;
         tier2.udpOut --> udp.appIn++ if numTiers>1;
         udp.appOut++ --> tier2.udpIn if numTiers>1;
-        tier2.tcpOut --> tcp.appIn++ if numTiers>1;
-        tcp.appOut++ --> tier2.tcpIn if numTiers>1;
 
         tier3.to_lowerTier --> tier2.from_upperTier if numTiers > 2;
         tier3.from_lowerTier <-- tier2.to_upperTier if numTiers > 2;
         tier3.udpOut --> udp.appIn++ if numTiers>2;
         udp.appOut++ --> tier3.udpIn if numTiers>2;
-        tier3.tcpOut --> tcp.appIn++ if numTiers>2;
-        tcp.appOut++ --> tier3.tcpIn if numTiers>2;
 
         overlay.udpOut --> udp.appIn++;
         overlay.udpIn <-- udp.appOut++;
-
-        overlay.tcpOut --> tcp.appIn++;
-        overlay.tcpIn <-- tcp.appOut++;
 
         bootstrapList.udpOut --> udp.appIn++;
         bootstrapList.udpIn <-- udp.appOut++;
 
         udp.ipOut --> networkLayer.udpIn;
         udp.ipIn <-- networkLayer.udpOut;
-
-        tcp.ipOut --> networkLayer.tcpIn;
-        tcp.ipIn <-- networkLayer.tcpOut;
 
         // connections to network outside
         for i=0..sizeof(pppg)-1 {

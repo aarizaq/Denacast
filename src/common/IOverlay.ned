@@ -31,8 +31,6 @@ moduleinterface IOverlay
     gates:
         input udpIn;    // gate from the UDP layer
         input appIn;    // gate from the application
-        input tcpIn;    // gate from the TCP layer
-        output tcpOut;    // gate to the TCP layer
         output udpOut;    // gate to the UDP layer
         output appOut;    // gate to the application
 }

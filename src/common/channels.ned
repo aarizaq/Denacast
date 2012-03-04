@@ -83,3 +83,25 @@ channel inet_dialup_56k extends ned.DatarateChannel
         delay = 220ms;
         datarate = 56kbps;
 }
+channel denacast_channel extends ned.DatarateChannel
+{
+    parameters:
+        delay = uniform(15ms,20ms);
+        datarate =uniform(1.5Mbps,2Mbps);
+//        ber = uniform(1e-6,5e-6);
+}
+
+channel denacast_lossy extends ned.DatarateChannel
+{
+    parameters:
+        delay = uniform(15ms,20ms);
+        datarate =uniform(1.5Mbps,2Mbps);
+        ber = uniform(1e-6,5e-6);
+}
+
+channel source_channel extends ned.DatarateChannel
+{
+    parameters:
+        delay = 10ms;
+        datarate = 8Mbps;
+}

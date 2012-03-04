@@ -21,7 +21,13 @@
  */
 
 #include <omnetpp.h>
-#include <malloc.h>
+
+#if defined  __APPLE__
+	#include <stdlib.h>
+#else
+	#include <malloc.h>
+#endif
+
 #include <vector>
 #include <map>
 
@@ -31,7 +37,6 @@
 #include "IInterfaceTable.h"
 #include "InterfaceEntry.h"
 #include "IPv4InterfaceData.h"
-#include "IPv6InterfaceData.h"
 #include "TransportAddress.h"
 #include "IPvXAddressResolver.h"
 #include <cenvir.h>
@@ -41,7 +46,6 @@
 #include <StringConvert.h>
 
 #include "SimpleUDP.h"
-#include "SimpleTCP.h"
 
 #include "SimpleUnderlayConfigurator.h"
 
@@ -65,7 +69,6 @@ void SimpleUnderlayConfigurator::initializeUnderlay(int stage)
 
     // fetch some parameters
     fixedNodePositions = par("fixedNodePositions");
-    useIPv6 = par("useIPv6Addresses");
 
     // set maximum coordinates and send queue length
     fieldSize = par("fieldSize");
@@ -116,17 +119,22 @@ TransportAddress* SimpleUnderlayConfigurator::createNode(NodeType type,
     cModuleType* moduleType = cModuleType::get(type.terminalType.c_str());
 
     std::string nameStr = "overlayTerminal";
-    if (churnGenerator.size() > 1) {
-        nameStr += "-" + convertToString<int32_t>(type.typeID);
+    if( churnGenerator.size() > 1 ){
+        nameStr += "-" + convertToString<uint32_t>(type.typeID);
     }
     cModule* node = moduleType->create(nameStr.c_str(), getParentModule(),
                                        numCreated + 1, numCreated);
 
+    node->par("overlayType").setStringValue(type.overlayType.c_str());
+    node->par("tier1Type").setStringValue(type.tier1Type.c_str());
+    node->par("tier2Type").setStringValue(type.tier2Type.c_str());
+    node->par("tier3Type").setStringValue(type.tier3Type.c_str());
+
     std::string displayString;
 
-    if ((type.typeID > 0) && (type.typeID <= NUM_COLORS)) {
-        ((displayString += "i=device/wifilaptop_l,")
-                += colorNames[type.typeID - 1]) += ",40;i2=block/circle_s";
+    if ((type.typeID > 1) && (type.typeID <= (NUM_COLORS + 1))) {
+        ((displayString += "i=device/wifilaptop_l,") += colorNames[type.typeID
+                - 2]) += ",40;i2=block/circle_s";
     } else {
         displayString = "i=device/wifilaptop_l;i2=block/circle_s";
     }
@@ -140,16 +148,14 @@ TransportAddress* SimpleUnderlayConfigurator::createNode(NodeType type,
         node->callInitialize(i);
     }
 
-    IPvXAddress addr;
-    if (useIPv6) {
-        addr = IPv6Address(0, nextFreeAddress++, 0, 0);
-    } else {
-        addr = IPv4Address(nextFreeAddress++);
-    }
+    // FIXME use only IPv4?
+    IPvXAddress addr = IPv4Address(nextFreeAddress++);
 
-    int chanIndex = intuniform(0, type.channelTypesRx.size() - 1);
-    cChannelType* rxChan = cChannelType::find(type.channelTypesRx[chanIndex].c_str());
-    cChannelType* txChan = cChannelType::find(type.channelTypesTx[chanIndex].c_str());
+    int chanIndexRx = intuniform(0, type.channelTypesRx.size() - 1);
+    int chanIndexTx = intuniform(0, type.channelTypesTx.size() - 1);
+
+    cChannelType* rxChan = cChannelType::find(type.channelTypesRx[chanIndexRx].c_str());
+    cChannelType* txChan = cChannelType::find(type.channelTypesTx[chanIndexTx].c_str());
 
     if (!txChan || !rxChan)
          opp_error("Could not find Channel Type. Most likely parameter "
@@ -161,7 +167,7 @@ TransportAddress* SimpleUnderlayConfigurator::createNode(NodeType type,
     if (!useXmlCoords) {
         entry = new SimpleNodeEntry(node, rxChan, txChan, sendQueueLength, fieldSize);
     } else {
-        // get random unused node
+        //get random unused node
         uint32_t volunteer = intuniform(0, nodeRecordPool.size() - 1);
         uint32_t temp = volunteer;
         while (nodeRecordPool[volunteer].second == false) {
@@ -178,41 +184,23 @@ TransportAddress* SimpleUnderlayConfigurator::createNode(NodeType type,
          entry = new SimpleNodeEntry(node, rxChan, txChan,
                  sendQueueLength, nodeRecordPool[volunteer].first, volunteer);
 
-        // insert IP-address into noderecord used
-        // nodeRecordPool[volunteer].first->ip = addr;
+        //insert IP-address into noderecord used
+        //nodeRecordPool[volunteer].first->ip = addr;
         nodeRecordPool[volunteer].second = false;
     }
 
-    SimpleUDP* simpleUdp = check_and_cast<SimpleUDP*> (node->getSubmodule("udp"));
-    simpleUdp->setNodeEntry(entry);
-    SimpleTCP* simpleTcp = dynamic_cast<SimpleTCP*> (node->getSubmodule("tcp", 0));
-    if (simpleTcp) {
-        simpleTcp->setNodeEntry(entry);
-    }
+    SimpleUDP* simple = check_and_cast<SimpleUDP*> (node->getSubmodule("udp"));
+    simple->setNodeEntry(entry);
 
     // Add pseudo-Interface to node's interfaceTable
-    if (useIPv6) {
-        IPv6InterfaceData* ifdata = new IPv6InterfaceData;
-        ifdata->assignAddress(addr.get6(),false, 0, 0);
-        IPv6InterfaceData::AdvPrefix prefix;
-        prefix.prefix = addr.get6();
-        prefix.prefixLength = 64;
-        ifdata->addAdvPrefix(prefix);
-        InterfaceEntry* e = new InterfaceEntry;
-        e->setName("dummy interface");
-        e->setIPv6Data(ifdata);
-        IPvXAddressResolver().interfaceTableOf(node)->addInterface(e, NULL);
-    }
-    else {
-        IPv4InterfaceData* ifdata = new IPv4InterfaceData;
-        ifdata->setIPAddress(addr.get4());
-        ifdata->setNetmask(IPv4Address("255.255.255.255"));
-        InterfaceEntry* e = new InterfaceEntry;
-        e->setName("dummy interface");
-        e->setIPv4Data(ifdata);
+    IPv4InterfaceData* ifdata = new IPv4InterfaceData;
+    ifdata->setIPAddress(addr.get4());
+    ifdata->setNetmask(IPv4Address("255.255.255.255"));
+    InterfaceEntry* e = new InterfaceEntry;
+    e->setName("dummy interface");
+    e->setIPv4Data(ifdata);
 
-        IPvXAddressResolver().interfaceTableOf(node)->addInterface(e, NULL);
-    }
+    IPvXAddressResolver().interfaceTableOf(node)->addInterface(e, NULL);
 
     // create meta information
     SimpleInfo* info = new SimpleInfo(type.typeID, node->getId(), type.context);
@@ -243,7 +231,7 @@ TransportAddress* SimpleUnderlayConfigurator::createNode(NodeType type,
     overlayTerminalCount++;
     numCreated++;
 
-    churnGenerator[type.typeID]->terminalCount++;
+    churnGenerator[type.typeID - 1]->terminalCount++;
 
     TransportAddress *address = new TransportAddress(addr);
 
@@ -302,12 +290,12 @@ uint32_t SimpleUnderlayConfigurator::parseCoordFile(const char* nodeCoordinateSo
     EV << nodeRecordPool.size()
        << " nodes added to vector \"nodeRecordPool\"." << endl;
 
-#if OMNETPP_VERSION>=0x0401
-    // free memory used for xml document
-    ev.forgetXMLDocument(nodeCoordinateSource);
-#if !defined(__APPLE__) &&  !defined(_WIN32)
+    // free memory used for xml document (not needed any more)
+    // disabled for now, since OMNeT++ keeps a cache for parsed XML
+    // documents, which leads to a SEGV, if the same document is parsed twice  
+#if 0    
+    delete rootElement;
     malloc_trim(0);
-#endif    
 #endif
     
     return (uint32_t)ceil(max_coord);
@@ -341,7 +329,7 @@ void SimpleUnderlayConfigurator::preKillNode(NodeType type, TransportAddress* ad
     }
 
     uint32_t effectiveType = info->getTypeID();
-    cGate* gate = entry->getUdpIPv4Gate();
+    cGate* gate = entry->getGate();
 
     cModule* node = gate->getOwnerModule()->getParentModule();
 
@@ -361,7 +349,7 @@ void SimpleUnderlayConfigurator::preKillNode(NodeType type, TransportAddress* ad
     overlayTerminalCount--;
     numKilled++;
 
-    churnGenerator[effectiveType]->terminalCount--;
+    churnGenerator[effectiveType - 1]->terminalCount--;
 
     // update display
     setDisplayString();
@@ -401,7 +389,7 @@ void SimpleUnderlayConfigurator::migrateNode(NodeType type, TransportAddress* ad
         entry = info->getEntry();
     }
 
-    cGate* gate = entry->getUdpIPv4Gate();
+    cGate* gate = entry->getGate();
     cModule* node = gate->getOwnerModule()->getParentModule();
 
     // do not migrate node that is already scheduled
@@ -484,11 +472,11 @@ void SimpleUnderlayConfigurator::handleTimerEvent(cMessage* msg)
     if (info != NULL) {
         entry = info->getEntry();
     } else {
-        throw cRuntimeError("SimpleUnderlayConfigurator: Trying to kill "
-                            "node with unknown TransportAddress!");
+        throw cRuntimeError("SimpleNetConfigurator: Trying to kill node with "
+                            "unknown TransportAddress!");
     }
 
-    cGate* gate = entry->getUdpIPv4Gate();
+    cGate* gate = entry->getGate();
     cModule* node = gate->getOwnerModule()->getParentModule();
 
     if (useXmlCoords) {

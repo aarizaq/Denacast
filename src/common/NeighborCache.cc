@@ -66,77 +66,77 @@ Define_Module(NeighborCache);
 
 void NeighborCache::initializeApp(int stage)
 {
-    if (stage == MAX_STAGE_COMPONENTS) {
-        neighborCache.clear();
-        WATCH_UNORDERED_MAP(neighborCache);
-
-        enableNeighborCache = par("enableNeighborCache");
-        rttExpirationTime = par("rttExpirationTime");
-        maxSize = par("maxSize");
-        doDiscovery = par("doDiscovery");
-        ncsSendBackOwnCoords = par("ncsSendBackOwnCoords");
-
-        // set default query types
-        std::string temp = par("defaultQueryType").stdstringValue();
-        if (temp == "exact")
-            defaultQueryType = NEIGHBORCACHE_EXACT;
-        else if (temp == "exact_timeout")
-            defaultQueryType = NEIGHBORCACHE_EXACT_TIMEOUT;
-        else if (temp == "available")
-            defaultQueryType = NEIGHBORCACHE_AVAILABLE;
-        else if (temp == "estimated")
-            defaultQueryType = NEIGHBORCACHE_ESTIMATED;
-        else throw cRuntimeError((std::string("Wrong query type: ")
-            + temp).c_str());
-
-        temp = par("defaultQueryTypeI").stdstringValue();
-        if (temp == "available")
-            defaultQueryTypeI = NEIGHBORCACHE_AVAILABLE;
-        else if (temp == "estimated")
-            defaultQueryTypeI = NEIGHBORCACHE_ESTIMATED;
-        else throw cRuntimeError((std::string("Wrong query type (I): ")
-            + temp).c_str());
-
-        temp = par("defaultQueryTypeQ").stdstringValue();
-        if (temp == "exact")
-            defaultQueryTypeQ = NEIGHBORCACHE_EXACT;
-        else if (temp == "exact_timeout")
-            defaultQueryTypeQ = NEIGHBORCACHE_EXACT_TIMEOUT;
-        else if (temp == "query")
-            defaultQueryTypeQ = NEIGHBORCACHE_QUERY;
-        else throw cRuntimeError((std::string("Wrong query type (Q): ")
-        + temp).c_str());
-
-        temp = par("ncsType").stdstringValue();
-        if (temp == "none") ncs = NULL;
-        else if (temp == "vivaldi") ncs = new Vivaldi();
-        else if (temp == "svivaldi") ncs = new SVivaldi();
-        else if (temp == "gnp") ncs = new Nps(); //TODO
-        else if (temp == "nps") ncs = new Nps();
-        else if (temp == "simple") ncs = new SimpleNcs();
-        else throw cRuntimeError((std::string("Wrong NCS type: ")
-            + temp).c_str());
-
-        globalStatistics = GlobalStatisticsAccess().get();
-
-        misses = 0;
-        hits = 0;
-
-        rttHistory = par("rttHistory");
-        timeoutAccuracyLimit = par("timeoutAccuracyLimit");
-
-        numMsg = 0;
-        absoluteError = 0.0;
-        relativeError = 0.0;
-        numRttErrorToHigh = 0;
-        numRttErrorToLow = 0;
-        lastAbsoluteErrorPerNode.clear();
-        WATCH(absoluteError);
-        WATCH(relativeError);
-        WATCH(numMsg);
-    } else if (stage == MIN_STAGE_TIER_1) {
-        if (ncs) ncs->init(this);
+    if (stage != MAX_STAGE_COMPONENTS) {
+        return;
     }
+
+    neighborCache.clear();
+    WATCH_UNORDERED_MAP(neighborCache);
+
+    enableNeighborCache = par("enableNeighborCache");
+    rttExpirationTime = par("rttExpirationTime");
+    maxSize = par("maxSize");
+    doDiscovery =par("doDiscovery");
+
+    // set default query types
+    std::string temp = par("defaultQueryType").stdstringValue();
+    if (temp == "exact")
+        defaultQueryType = NEIGHBORCACHE_EXACT;
+    else if (temp == "exact_timeout")
+        defaultQueryType = NEIGHBORCACHE_EXACT_TIMEOUT;
+    else if (temp == "available")
+        defaultQueryType = NEIGHBORCACHE_AVAILABLE;
+    else if (temp == "estimated")
+        defaultQueryType = NEIGHBORCACHE_ESTIMATED;
+    else throw cRuntimeError((std::string("Wrong query type: ")
+                             + temp).c_str());
+
+    temp = par("defaultQueryTypeI").stdstringValue();
+    if (temp == "available")
+        defaultQueryTypeI = NEIGHBORCACHE_AVAILABLE;
+    else if (temp == "estimated")
+        defaultQueryTypeI = NEIGHBORCACHE_ESTIMATED;
+    else throw cRuntimeError((std::string("Wrong query type (I): ")
+                             + temp).c_str());
+
+    temp = par("defaultQueryTypeQ").stdstringValue();
+    if (temp == "exact")
+        defaultQueryTypeQ = NEIGHBORCACHE_EXACT;
+    else if (temp == "exact_timeout")
+        defaultQueryTypeQ = NEIGHBORCACHE_EXACT_TIMEOUT;
+    else if (temp == "query")
+        defaultQueryTypeQ = NEIGHBORCACHE_QUERY;
+    else throw cRuntimeError((std::string("Wrong query type (Q): ")
+                             + temp).c_str());
+
+    temp = par("ncsType").stdstringValue();
+    if (temp == "none") ncs = NULL;
+    else if (temp == "vivaldi") ncs = new Vivaldi();
+    else if (temp == "svivaldi") ncs = new SVivaldi();
+    else if (temp == "gnp") ncs = new Nps(); //TODO
+    else if (temp == "nps") ncs = new Nps();
+    else throw cRuntimeError((std::string("Wrong NCS type: ")
+                              + temp).c_str());
+
+    if (ncs) ncs->init(this);
+
+    globalStatistics = GlobalStatisticsAccess().get();
+
+    misses = 0;
+    hits = 0;
+
+    rttHistory = par("rttHistory");
+    timeoutAccuracyLimit = par("timeoutAccuracyLimit");
+
+    numMsg = 0;
+    absoluteError = 0.0;
+    relativeError = 0.0;
+    numRttErrorToHigh = 0;
+    numRttErrorToLow = 0;
+    lastAbsoluteErrorPerNode.clear();
+    WATCH(absoluteError);
+    WATCH(relativeError);
+    WATCH(numMsg);
 }
 
 
@@ -339,8 +339,6 @@ void NeighborCache::updateNode(const NodeHandle& add, simtime_t rtt,
     // delete ncsInfo if old info is used
     if (deleteInfo) delete ncsInfo;
 }
-
-
 void NeighborCache::updateNcsInfo(const TransportAddress& node,
                                   AbstractNcsNodeInfo* ncsInfo)
 {
@@ -572,7 +570,6 @@ bool NeighborCache::handleRpcCall(BaseCallMessage* msg)
     return false;
 }
 
-
 // Prox stuff
 Prox NeighborCache::getProx(const TransportAddress &node,
                               NeighborCacheQueryType type,
@@ -705,7 +702,8 @@ void NeighborCache::queryProx(const TransportAddress &node,
         NeighborCacheEntry& entry = neighborCache[node];
 
         entry.waitingContexts.push_back(temp);
-        neighborCacheExpireMap.insert(std::make_pair(entry.insertTime, node));
+        neighborCacheExpireMap.insert(std::make_pair(entry.insertTime,
+                                                     node));
         cleanupCache();
     } else {
         NeighborCacheEntry& entry = neighborCache[node];
@@ -766,6 +764,48 @@ void NeighborCache::calcRttError(const NodeHandle& handle, simtime_t rtt)
 }
 
 
+/*simtime_t NeighborCache::getMeanRtt(const TransportAddress &node)
+{
+    if (neighborCache.count(node) == 0) {
+        throw cRuntimeError("NeighborCache.cc: getMeanRtt was asked for"
+                            "a non-existent node reference.");
+    }
+
+    uint16_t size = neighborCache[node].lastRtts.size();
+    if (size == 0) return -1;
+
+    simtime_t rttSum = 0;
+    for (int i = 0; i < size; i++){
+        rttSum += neighborCache[node].lastRtts[i];
+    }
+    return (rttSum / size);
+}
+
+// TODO remove meanRtt
+double NeighborCache::getVarRtt(const TransportAddress &node, simtime_t &meanRtt)
+{
+    if (neighborCache.count(node) == 0) {
+        throw cRuntimeError("NeighborCache.cc: getMeanRtt was asked for"
+                            "a non-existent node reference.");
+    }
+
+    uint16_t size = neighborCache[node].lastRtts.size();
+    if (size == 0) return -1.0;
+    if (size == 1) return 0.0;
+
+    meanRtt = getMeanRtt(node);
+    if (SIMTIME_DBL(meanRtt) == -1.0) return 0.0;
+
+    double sum = 0.0;
+    for (int i = 0; i < size; i++){
+        simtime_t tempRtt = neighborCache[node].lastRtts.at(i) - meanRtt;
+        sum += (SIMTIME_DBL(tempRtt) * SIMTIME_DBL(tempRtt));
+    }
+
+    //std::cout << "mean: " << meanRtt << ", var: " << (sum / size) << std::endl;
+    return (sum / size); //TODO -1?
+}*/
+
 std::pair<simtime_t, simtime_t> NeighborCache::getMeanVarRtt(const TransportAddress &node,
                                                              bool returnVar)
 {
@@ -795,6 +835,7 @@ std::pair<simtime_t, simtime_t> NeighborCache::getMeanVarRtt(const TransportAddr
         sum += (SIMTIME_DBL(tempRtt) * SIMTIME_DBL(tempRtt));
     }
 
+    //std::cout << "mean: " << meanRtt << ", var: " << (sum / size) << std::endl;
     return std::make_pair(meanRtt, (sum / size));
 }
 
@@ -834,7 +875,7 @@ simtime_t NeighborCache::getRttBasedTimeout(const NodeHandle &node)
     return timeout;
 }
 
-//Calculate timeout with NCS
+//Calculate timeout with Vivaldi/GNP/...
 simtime_t NeighborCache::getNcsBasedTimeout(const NodeHandle &node)
 {
     double timeout = -1;

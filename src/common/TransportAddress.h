@@ -189,18 +189,7 @@ public://methods: setters and getters
      * @param natType the type of NAT this node is behind
      */
     void setIp(const IPvXAddress& ip, int port = -1,
-               NatType natType = UNKNOWN_NAT);
-
-    /**
-     * Sets the ip address, port and NAT type. DEPRECATED: Use setIp() instead!
-     *
-     * @param ip the new IPvXAddress
-     * @param port the new port
-     * @param natType the type of NAT this node is behind
-     */
-    void setAddress(const IPvXAddress& ip, int port = -1,
-                    NatType natType = UNKNOWN_NAT) __attribute ((deprecated))
-                    { setIp(ip, port, natType); };
+                     NatType natType = UNKNOWN_NAT);
 
     /**
      * Appends a source route to this TransportAddress
@@ -228,14 +217,6 @@ public://methods: setters and getters
      * @return this->ip
      */
     const IPvXAddress& getIp() const;
-
-    /**
-     * returns ip address. DEPRECATED: Use getIp() instead!
-     *
-     * @return this->ip
-     */
-    const IPvXAddress& getAddress() const __attribute ((deprecated))
-            { return getIp(); };
 
     /**
      * returns port

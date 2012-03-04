@@ -43,11 +43,11 @@ void Nps::init(NeighborCache* neighborCache)
     this->neighborCache = neighborCache;
     overlay = neighborCache->overlay;
 
-    maxLayer = neighborCache->par("npsMaxLayer");
-    dimensions = neighborCache->par("gnpDimensions");
-    landmarkTimeout = neighborCache->par("gnpLandmarkTimeout");
+    npsMaxLayer = neighborCache->par("npsMaxLayer");
+    npsDimensions = neighborCache->par("npsDimensions");
+    landmarkTimeout = neighborCache->par("landmarkTimeout");
 
-    GnpNpsCoordsInfo::setDimension(dimensions);
+    GnpNpsCoordsInfo::setDimension(npsDimensions);
     ownCoords = new GnpNpsCoordsInfo();
 
     receivedCalls = 0;
@@ -162,7 +162,7 @@ void Nps::coordsReqRpc(CoordsReqCall* msg)
     receivedCalls++;
     CoordsReqResponse* coordResp = new CoordsReqResponse("CoordsReqResp");
     coordResp->setLayer(getOwnLayer()); //TODO
-    coordResp->setNcsInfoArraySize(dimensions + 1);
+    coordResp->setNcsInfoArraySize(npsDimensions + 1);
 
     //if (getOwnLayer() != 0) {
     // ordinary node
@@ -221,7 +221,7 @@ void Nps::coordsReqRpcResponse(CoordsReqResponse* response,
        << " (" << neighborCache->thisNode.getKey().toString(16) << ")]\n    received landmark coords: "
        << tempCoords[0];
 
-    for (uint8_t i = 1; i < dimensions; i++) {
+    for (uint8_t i = 1; i < npsDimensions; i++) {
         EV << ", " << tempCoords[i];
     }
     EV  << " (rtt = " << rtt << ")" << endl;
@@ -275,8 +275,8 @@ void Nps::coordsReqRpcResponse(CoordsReqResponse* response,
                                   coordsInfo);
 
         std::vector<LandmarkDataEntry> probedLandmarks;
-        if (getLandmarkSetSize() < dimensions + 1) {
-            setLandmarkSet(dimensions + 1, maxLayer, &landmarkSet);
+        if (getLandmarkSetSize() < npsDimensions + 1) {
+            setLandmarkSet(npsDimensions + 1, npsMaxLayer, &landmarkSet);
         }
 
         for (std::vector<TransportAddress>::iterator it = landmarkSet.begin();
@@ -306,7 +306,7 @@ void Nps::coordsReqRpcResponse(CoordsReqResponse* response,
         EV << "[Nps::coordsReqRpcResponse() @ " << neighborCache->thisNode.getIp()
            << " (" << neighborCache->thisNode.getKey().toString(16) << ")]\n    setting own coords: "
            << coords[0];
-        for (uint8_t i = 1; i < dimensions; i++) {
+        for (uint8_t i = 1; i < npsDimensions; i++) {
             EV << ", " << coords[i];
         }
         EV << endl;
@@ -422,7 +422,7 @@ bool Nps::setLandmarkSet(uint8_t howManyLM, uint8_t maxLayer,
 void Nps::sendCoordRequests()
 {
     std::vector <TransportAddress> landmarks;
-    landmarks = getLandmarks(dimensions + 1);
+    landmarks = getLandmarks(npsDimensions + 1);
 
     simtime_t timeout = -1;
 
@@ -431,7 +431,7 @@ void Nps::sendCoordRequests()
             const TransportAddress& tolm = landmarks[i];
             sendCoordsReqCall(tolm, timeout);
         }
-        setLandmarkSet(dimensions + 1, maxLayer, &landmarkSet);
+        setLandmarkSet(npsDimensions + 1, npsMaxLayer, &landmarkSet);
     }
 }
 
@@ -467,7 +467,7 @@ void Nps::setOwnLayer(int8_t layer)
 
     // Workaround against -1 ports in BS oracle
     if (layer > 0) globalNodeList->refreshEntry(neighborCache->overlay->getThisNode());
-    if (layer < maxLayer) {
+    if (layer < npsMaxLayer) {
         globalNodeList->incLandmarkPeerSize();
         globalNodeList->incLandmarkPeerSizePerType(thisInfo->getTypeID());
     }
@@ -496,16 +496,16 @@ void Nps::computeOwnCoordinates(const std::vector<LandmarkDataEntry>& landmarks)
 {
     CoordCalcFunction coordcalcf(landmarks);
 
-    Vec_DP initCoordinates(dimensions);
-    Vec_DP bestCoordinates(dimensions);
-    std::vector<double> computedCoordinatesStdVector(dimensions);
+    Vec_DP initCoordinates(npsDimensions);
+    Vec_DP bestCoordinates(npsDimensions);
+    std::vector<double> computedCoordinatesStdVector(npsDimensions);
 
     double bestval;
     double resval;
 
     for (uint runs = 0; runs < coordCalcRuns; runs++) {
         // start with random coordinates (-100..100 in each dim)
-        for (uint i = 0; i < dimensions; i++) {
+        for (uint i = 0; i < npsDimensions; i++) {
             initCoordinates[i] = uniform(-100, 100);
         }
         // compute minimum coordinates via Simplex-Downhill minimum
@@ -518,7 +518,7 @@ void Nps::computeOwnCoordinates(const std::vector<LandmarkDataEntry>& landmarks)
         }
     }
 
-    for (uint i = 0; i < dimensions; i++) {
+    for (uint i = 0; i < npsDimensions; i++) {
         computedCoordinatesStdVector[i] = bestCoordinates[i];
     }
 
@@ -537,7 +537,7 @@ std::vector<TransportAddress> Nps::getLandmarks(uint8_t howmany)
         TransportAddress* lm = globalNodeList->getRandomAliveNode();
         PeerInfo* lmInfo = globalNodeList->getPeerInfo(lm->getIp());
         if (lmInfo->getNpsLayer() >= 0 &&
-            lmInfo->getNpsLayer() < maxLayer) {
+            lmInfo->getNpsLayer() < npsMaxLayer) {
             // already in returnPool?
             bool alreadyin = false;
             for (uint8_t i = 0; i < returnPool.size(); i++) {
@@ -554,7 +554,7 @@ std::vector<TransportAddress> Nps::getLandmarks(uint8_t howmany)
 
 bool Nps::enoughLandmarks()
 {
-    return (globalNodeList->getLandmarkPeerSize() > dimensions);
+    return (globalNodeList->getLandmarkPeerSize() > npsDimensions);
 }
 
 

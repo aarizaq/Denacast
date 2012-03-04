@@ -64,62 +64,62 @@ module SingleHost
         }
         interfaceTable: InterfaceTable {
             parameters:
-                @display("p=64,202");
+                @display("p=68,206");
         }
         routingTable: RoutingTable {
             parameters:
                 IPForward = IPForward; // true if ip packets should be forwarded
                 routerId = ""; // id of the router
                 routingFile = routingFile; // use predefined routing file if given
-                @display("p=64,271");
+                @display("p=68,276");
         }
         packetParser: <parser> like IPacketParser {
             parameters:
-                @display("p=171,271;i=block/wheelbarrow");
+                @display("p=171,278;i=block/wheelbarrow");
         }
         applicationParser: <appParser> like IPacketParser {
             parameters:
-                @display("p=171,342;i=block/wheelbarrow");
+                @display("p=171,348;i=block/wheelbarrow");
         }
         tier3: <tier3Type> like ITier {
             parameters:
-                @display("p=54,32;i=block/segm");
+                @display("p=64,56;i=block/segm");
         }
         tier2: <tier2Type> like ITier {
             parameters:
-                @display("p=137,71;i=block/segm");
+                @display("p=131,56;i=block/segm");
         }
         tier1: <tier1Type> like ITier {
             parameters:
-                @display("p=223,110;i=block/segm");
+                @display("p=202,58;i=block/segm");
         }
         overlay: <overlayType> like IOverlay {
             parameters:
-                @display("p=287,163;i=block/network2");
+                @display("p=266,128;i=block/network2");
         }
         udp: UDP {
             parameters:
-                @display("p=287,264");
+                @display("p=266,198");
         }
         networkLayer: NetworkLayer {
             parameters:
                 proxyARP = false; // sets proxy \ARP mode (replying to \ARP requests for the addresses for which a routing table entry exists)
-                @display("p=287,342;i=block/fork;q=queue");
+                @display("p=266,268;i=block/fork;q=queue");
             gates:
                 ifIn[1];
                 ifOut[1];
         }
         outDev: <outDeviceType> like RealworldDevice {
             parameters:
-                @display("p=287,415,row,90;q=txQueue;i=block/ifcard");
+                @display("p=266,358,row,90;q=txQueue;i=block/ifcard");
         }
         neighborCache: NeighborCache {
             parameters:
-                @display("p=64,342");
+                @display("p=68,352");
         }
         bootstrapList: BootstrapList {
             parameters:
-                @display("p=171,202");
+                @display("p=176,208");
         }
         cryptoModule: CryptoModule {
             parameters:

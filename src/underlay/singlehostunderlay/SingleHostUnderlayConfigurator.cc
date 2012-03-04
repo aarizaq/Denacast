@@ -160,7 +160,7 @@ void SingleHostUnderlayConfigurator::initializeUnderlay(int stage)
                                 bootstrapInfo);
 
         globalNodeList->registerPeer(NodeHandle(OverlayKey::ONE,
-            IPv4Address(par("bootstrapIP").stringValue()), par("bootstrapPort")));
+                IPv4Address(par("bootstrapIP").stringValue()), par("bootstrapPort")));
     }
 
     // update display

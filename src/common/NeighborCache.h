@@ -38,7 +38,6 @@
 #include <Nps.h>
 #include <Vivaldi.h>
 #include <SVivaldi.h>
-#include <SimpleNcs.h>
 #include <ProxNodeHandle.h>
 #include <HashFunc.h>
 
@@ -86,7 +85,6 @@ private:
                      simtime_t insertTime);
 
     AbstractNcs* ncs;
-    bool ncsSendBackOwnCoords;
 
     NeighborCacheQueryType defaultQueryType;
     NeighborCacheQueryType defaultQueryTypeI;
@@ -211,14 +209,12 @@ public:
 
     inline bool isEnabled() { return enableNeighborCache; };
 
-    bool sendBackOwnCoords() { return (ncsSendBackOwnCoords && ncs != NULL); };
+    bool adaptingNcs() { return ncs && ncs->isAdapting(); };
 
     const AbstractNcs& getNcsAccess() const {
         if (!ncs) throw cRuntimeError("No NCS activated");
         else return *ncs;
     };
-
-    const NodeHandle& getOverlayThisNode() { return overlay->getThisNode(); };
 
     uint16_t getNeighborCacheSize() { return neighborCache.size(); };
 

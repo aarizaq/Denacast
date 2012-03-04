@@ -42,8 +42,9 @@ class UnderlayConfigurator;
 class NodeType
 {
   public:
-    NodeType() : typeID(-1) {};
-    int32_t typeID;
+    NodeType() : typeID(0) {};
+    uint32_t typeID;
+    std::string overlayType, tier1Type, tier2Type, tier3Type;
     std::string terminalType;
     std::vector<std::string> channelTypesRx, channelTypesTx;
     cObject** context;

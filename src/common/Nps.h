@@ -83,8 +83,8 @@ class Nps : public RpcListener, public AbstractNcs
     GlobalNodeList* globalNodeList;
     CoordBasedRouting* coordBasedRouting;
 
-    uint8_t maxLayer;
-    uint8_t dimensions;
+    uint8_t npsMaxLayer;
+    uint8_t npsDimensions;
     simtime_t landmarkTimeout;
 
     GnpNpsCoordsInfo* ownCoords; //TODO
@@ -102,6 +102,7 @@ class Nps : public RpcListener, public AbstractNcs
     Nps() {};
     void init(NeighborCache* neighborCache);
 
+    virtual bool isAdapting() { return false; }
     void handleTimerEvent(cMessage* msg);
     virtual bool handleRpcCall(BaseCallMessage* msg);
 

@@ -28,7 +28,7 @@
 
 #include "UnderlayConfigurator.h"
 
-const int32_t UnderlayConfigurator::NUM_COLORS=8;
+const uint32_t UnderlayConfigurator::NUM_COLORS=8;
 const char* UnderlayConfigurator::colorNames[] = {
      "red", "green", "yellow", "brown", "grey", "violet", "pink", "orange"};
 
@@ -88,8 +88,6 @@ void UnderlayConfigurator::initialize(int stage)
     if (stage == MAX_STAGE_UNDERLAY) {
         // Create churn generators
         NodeType t;
-        t.typeID = 0;
-
         std::vector<std::string> churnGeneratorTypes =
             cStringTokenizer(par("churnGeneratorTypes"), " ").asVector();
         std::vector<std::string> terminalTypes =
@@ -142,13 +140,13 @@ void UnderlayConfigurator::initialize(int stage)
 
             // Add it to the list of generators and initialize it
             churnGenerator.push_back(gen);
+            t.typeID++;
             t.terminalType = (terminalTypes.size() == 1) ?
                 terminalTypes[0] :
                 terminalTypes[it - churnGeneratorTypes.begin()];
 
             gen->setNodeType(t);
             gen->buildInside();
-            t.typeID++;
         }
     }
 }

@@ -18,7 +18,6 @@
  *   - Underlay configurator base class (UnderlayConfigurator)<br>
  *     - for SimpleUnderlay (SimpleUnderlayConfigurator)<br>
  *     - for InetUnderlay (InetUnderlayConfigurator)<br>
- *     - for ReaSEUnderlay (ReaSEUnderlayConfigurator)<br>
  *     - for SingleHostUnderlay (SingleHostUnderlayConfigurator)<br>
  *
  * <b>Overlay</b> - overlay classes and message types<br>
@@ -33,7 +32,6 @@
  *   - application layer multicast oversim::Nice
  *   - gaming overlay PubSubMMOG
  *   - gaming overlay Vast
- *   - gaming overlay NTree
  *   - gaming overlay Quon
  * - Base class for lookups in the overlay (IterativeLookup)<br>
  *

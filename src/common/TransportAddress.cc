@@ -148,7 +148,7 @@ bool TransportAddress::operator>=(const TransportAddress &rhs) const
 
 //public
 void TransportAddress::setIp(const IPvXAddress& ip, int port,
-                             NatType natType)
+                                   NatType natType)
 {
     this->ip = ip;
     if (port!=-1)

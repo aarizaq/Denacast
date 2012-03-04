@@ -46,13 +46,13 @@
 
 #ifdef SHA1_LITTLE_ENDIAN
 #define SHABLK0(i) (m_block->l[i] = \
-        (ROL32(m_block->l[i],24) & 0xFF00FF00) | (ROL32(m_block->l[i],8) & 0x00FF00FF))
+	(ROL32(m_block->l[i],24) & 0xFF00FF00) | (ROL32(m_block->l[i],8) & 0x00FF00FF))
 #else
 #define SHABLK0(i) (m_block->l[i])
 #endif
 
 #define SHABLK(i) (m_block->l[i&15] = ROL32(m_block->l[(i+13)&15] ^ m_block->l[(i+8)&15] \
-        ^ m_block->l[(i+2)&15] ^ m_block->l[i&15],1))
+	^ m_block->l[(i+2)&15] ^ m_block->l[i&15],1))
 
 // SHA-1 rounds
 #define _R0(v,w,x,y,z,i) { z+=((w&(x^y))^y)+SHABLK0(i)+0x5A827999+ROL32(v,5); w=ROL32(w,30); }

@@ -31,7 +31,7 @@ void ChurnGenerator::initialize(int stage)
     if (stage != MAX_STAGE_UNDERLAY)
         return;
 
-    if (type.typeID == -1) {
+    if (type.typeID == 0) {
         opp_error("NodeType not set when initializing ChurnGenerator");
     }
 
@@ -39,12 +39,17 @@ void ChurnGenerator::initialize(int stage)
     // get desired # of terminals
     targetOverlayTerminalNum = par("targetOverlayTerminalNum");
 
-    type.channelTypesTx = cStringTokenizer(par("channelTypes"), " ").asVector();
+    type.overlayType = par("overlayType").stdstringValue();
+    type.tier1Type = par("tier1Type").stdstringValue();
+    type.tier2Type = par("tier2Type").stdstringValue();
+    type.tier3Type = par("tier3Type").stdstringValue();
+    type.channelTypesTx = cStringTokenizer(par("channelTypesTx"), " ").asVector();
     type.channelTypesRx = cStringTokenizer(par("channelTypesRx"), " ").asVector();
     
-    if (type.channelTypesRx.size() != type.channelTypesTx.size()) {
-        type.channelTypesRx = type.channelTypesTx;
-    }
+//    if (type.channelTypesRx.size() != type.channelTypesTx.size()) {
+//        type.channelTypesRx = type.channelTypesTx;
+//    }
+    
     
     terminalCount = 0;
     init = true;

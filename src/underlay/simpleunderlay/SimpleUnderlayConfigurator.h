@@ -104,7 +104,6 @@ protected:
     uint32_t fieldSize;
     int dimensions;
     bool fixedNodePositions;
-    bool useIPv6;
 
     bool useXmlCoords;
     const char* nodeCoordinateSource;

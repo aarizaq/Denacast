@@ -35,7 +35,6 @@ class CommonAPIMessage;
 #include <UDPSocket.h>
 #include "NodeVector.h"
 #include <BaseRpc.h>
-#include <BaseTcpSupport.h>
 #include <INotifiable.h>
 #include <BaseOverlay.h>
 
@@ -73,7 +72,7 @@ class CommonAPIMessage;
  * @see KBRTestApp
  * @author Bernhard Heep
  */
-class BaseApp : public INotifiable, public BaseRpc, public BaseTcpSupport
+class BaseApp : public INotifiable, public BaseRpc
 {
 private:
 

@@ -37,7 +37,7 @@ void Vivaldi::init(NeighborCache* neighborCache)
     coordC = neighborCache->par("vivaldiCoordConst");
     dimension = neighborCache->par("vivaldiDimConst");
     enableHeightVector = neighborCache->par("vivaldiEnableHeightVector");
-    showPosition = neighborCache->par("vivaldiShowPosition");
+    showVivaldiPosition = neighborCache->par("showVivaldiPosition");
 
     // init variables
     VivaldiCoordsInfo::setDimension(dimension);
@@ -152,7 +152,7 @@ void Vivaldi::updateDisplay()
     neighborCache->getDisplayString().setTagArg("t", 0, buf);
 
     // show nodes at estimated position TODO
-    if (showPosition) {
+    if (showVivaldiPosition) {
         for (uint32_t i = 0; i < dimension; i++)
             neighborCache->getParentModule()
                 ->getDisplayString().setTagArg("p", i,

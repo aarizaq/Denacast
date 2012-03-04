@@ -237,7 +237,7 @@ const TransportAddress BootstrapList::getBootstrapNode()
 {
     if (!maintainList) {
         // TODO: add a parameter to return malicious bootstrap nodes also
-        return overlay->globalNodeList->getRandomNode(-1, true, true);
+        return overlay->globalNodeList->getRandomNode(0, true, true);
         // return overlay->globalNodeList->getBootstrapNode();
     } else {
         const NodeHandle *bootstrapNode = &NodeHandle::UNSPECIFIED_NODE;

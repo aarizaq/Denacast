@@ -69,8 +69,6 @@ public:
         coordinates[i] = value;
     };
 
-    Prox getDistance(const AbstractNcsNodeInfo& abstractInfo) const;
-
 protected:
     std::vector<double> coordinates;
     static uint8_t dim;
@@ -85,7 +83,7 @@ public:
 
     int8_t getLayer() const { return npsLayer; };
     void setLayer(int8_t layer) { npsLayer = layer; };
-
+    Prox getDistance(const AbstractNcsNodeInfo& abstractInfo) const;
     bool update(const AbstractNcsNodeInfo& abstractInfo);
 
     operator std::vector<double>() const;
@@ -95,27 +93,6 @@ protected:
 };
 
 std::ostream& operator<<(std::ostream& os, const GnpNpsCoordsInfo& info);
-
-
-class SimpleCoordsInfo : public EuclideanNcsNodeInfo
-{
-  public:
-    bool isValid() { return true; };
-
-    Prox getDistance(const AbstractNcsNodeInfo& abstractInfo) const;
-    bool update(const AbstractNcsNodeInfo& abstractInfo);
-
-    simtime_t getAccessDelay() const { return accessDelay; };
-    void setAccessDelay(simtime_t delay) { accessDelay = delay; };
-
-    operator std::vector<double>() const;
-
-protected:
-    simtime_t accessDelay;
-};
-
-std::ostream& operator<<(std::ostream& os, const SimpleCoordsInfo& info);
-
 
 class VivaldiCoordsInfo : public EuclideanNcsNodeInfo
 {
@@ -149,10 +126,12 @@ protected:
 std::ostream& operator<<(std::ostream& os, const VivaldiCoordsInfo& info);
 
 class AbstractNcs {
-  public:
+public:
     virtual ~AbstractNcs() { };
 
     virtual void init(NeighborCache* neighorCache) = 0;
+
+    virtual bool isAdapting() = 0;
 
     virtual AbstractNcsNodeInfo* getUnvalidNcsInfo() const = 0;
 

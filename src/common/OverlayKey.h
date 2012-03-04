@@ -23,7 +23,6 @@
 
 #ifndef __OVERLAYKEY_H_
 #define __OVERLAYKEY_H_
-#define USEGMP
 
 #ifndef USEGMP
 #include "OverlayKeyNoGmp.h"

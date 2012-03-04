@@ -32,7 +32,6 @@
 #include <TopologyVis.h>
 #include <INotifiable.h>
 #include <BaseRpc.h>
-#include <BaseTcpSupport.h>
 #include <IterativeLookupConfiguration.h>
 #include <RecursiveLookup.h>
 #include <InitStages.h>
@@ -61,7 +60,6 @@ class BootstrapList;
  */
 class BaseOverlay : public INotifiable,
                     public BaseRpc,
-                    public BaseTcpSupport,
                     public TopologyVis
 {
 
@@ -197,7 +195,6 @@ protected://fields: overlay attributes
     bool recordRoute;   /**< record visited hops on route */
     bool drawOverlayTopology;
     bool rejoinOnFailure;
-    bool sendRpcResponseToLastHop; /**< needed by KBR protocols for NAT support */
     bool dropFindNodeAttack; /**< if node is malicious, it tries a findNode attack */
     bool isSiblingAttack; /**< if node is malicious, it tries a isSibling attack */
     bool invalidNodesAttack; /**< if node is malicious, it tries a invalidNode attack */
@@ -609,7 +606,7 @@ private://methods: internal routing
      */
     virtual bool recursiveRoutingHook(const TransportAddress& dest,
                                       BaseRouteMessage* msg);
-
+                                      
     virtual void handleErrorUdp(const TransportAddress& dest){}
 
 public://methods: basic message routing
@@ -814,8 +811,6 @@ public:
     virtual uint8_t getBitsPerDigit() { return 1; };
 
     bool getMeasureAuthBlock() { return measureAuthBlock; }
-
-    BootstrapList& getBootstrapList() const { return *bootstrapList;}
 
 private:
     void findNodeRpc( FindNodeCall* call );

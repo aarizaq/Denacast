@@ -19,7 +19,7 @@
 #ifndef __CNETCOMMBUFFER_H__
 #define __CNETCOMMBUFFER_H__
 
-#include <../src/sim/parsim/ccommbufferbase.h>
+#include <ccommbufferbase.h>
 
 
 /**

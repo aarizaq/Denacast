@@ -23,6 +23,7 @@
 
 #ifndef _REALWORLDCONNECTOR_H_
 #define _REALWORLDCONNECTOR_H_
+
 #include "realtimescheduler.h"
 #include "INETDefs.h"
 #include "PacketParser.h"

@@ -47,12 +47,12 @@
 //    includes all modules and networks
 //  - base classes: BaseOverlay, BaseApp, BaseRpc
 //  - overlay protocols: Chord, Gia, Broose, Koorde, Pastry, Kademlia, Bamboo,<br>
-//    Nice, Vast, NTree, Quon and PubSubMMOG
+//    Nice, Vast, Quon and PubSubMMOG
 //  - tier1 applications: KBRTestApp, DHT, GIASearchApp, RealWorldTestApp<br>
 //    and SimpleGameClient
 //  - tier2 applications: DHTTestApp, P2pns
 //  - tier3 applications: XmlRpcInterface
-//  - underlay models: SimpleUnderlayNetwork, InetUnderlayNetwork, InetUnderlayNetwork6, ReaSEUnderlayNetwork<br>
+//  - underlay models: SimpleUnderlayNetwork, InetUnderlayNetwork<br>
 //    and SingleHostUnderlayNetwork
 //  - hosts: SimpleOverlayHost, InetOverlayHost, AccessRouter, OverlayAccessRouter, OverlayRouter etc.
 //  - network channels: simple_dsl, simple_ethernetline, simple_dsl_lossy, simple_ethernetline_lossy,<br>
@@ -71,7 +71,7 @@
 //
 // The OverSim framework was written by Ingmar Baumgart, Bernhard Heep,
 // Stephan Krause and others at the Institut of Telematics,
-// Karlsruhe Institute of Technology (KIT) in 2006-2010.
+// Universitaet Karlsruhe (TH) in 2006-2009.
 //
 // For changes please read the <a href="../ChangeLog">ChangeLog</a>
 //

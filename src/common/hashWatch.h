@@ -163,50 +163,6 @@ void createHashMapWatcher(const char *varname, UNORDERED_MAP<KeyT,ValueT,CmpT>& 
 };
 
 template<class KeyT, class ValueT, class CmpT>
-class SIM_API cConstHashMapWatcher : public cStdVectorWatcherBase
-{
-    protected:
-        const UNORDERED_MAP<KeyT,ValueT,CmpT>& m;
-        mutable typename UNORDERED_MAP<KeyT,ValueT,CmpT>::const_iterator it;
-        mutable int itPos;
-        std::string classname;
-    public:
-        cConstHashMapWatcher(const char *name, const UNORDERED_MAP<KeyT,ValueT,CmpT>& var) : cStdVectorWatcherBase(name), m(var) {
-            itPos=-1;
-            classname = std::string("unordered_map<")+opp_typename(typeid(KeyT))+","+opp_typename(typeid(ValueT))+">";
-        }
-        const char *getClassName() const {return classname.c_str();}
-        virtual const char *getElemTypeName() const {return "struct pair<*,*>";}
-        virtual int size() const {return m.size();}
-        virtual std::string at(int i) const {
-            if (i==0) {
-                it=m.begin(); itPos=0;
-            } else if (i==itPos+1 && it!=m.end()) {
-                ++it; ++itPos;
-            } else {
-                it=m.begin();
-                for (int k=0; k<i && it!=m.end(); k++) ++it;
-                itPos=i;
-            }
-            if (it==m.end()) {
-                return std::string("out of bounds");
-            }
-            return atIt();
-        }
-        virtual std::string atIt() const {
-            std::stringstream out;
-            out << it->first << " ==> " << it->second;
-            return out.str();
-        }
-};
-
-template <class KeyT, class ValueT, class CmpT>
-void createHashMapWatcher(const char *varname, const UNORDERED_MAP<KeyT,ValueT,CmpT>& m)
-{
-    new cConstHashMapWatcher<KeyT,ValueT,CmpT>(varname, m);
-};
-
-template<class KeyT, class ValueT, class CmpT>
 class SIM_API cPointerMapWatcher : public cStdVectorWatcherBase
 {
     protected:

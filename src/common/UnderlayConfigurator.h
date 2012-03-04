@@ -165,7 +165,7 @@ protected:
     simtime_t transitionTime; //!< time to wait before measuring after init phase is finished
     simtime_t measurementTime; //!< duration of the simulation after init and transition phase
 
-    static const int NUM_COLORS;
+    static const unsigned int NUM_COLORS;
     static const char* colorNames[];
 
 private:

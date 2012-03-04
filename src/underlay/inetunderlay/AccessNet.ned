@@ -22,8 +22,8 @@ package oversim.underlay.inetunderlay;
 simple AccessNet
 {
     parameters:
-        @display("i=block/cogwheel");
-        string channelTypes;   // list of (tx) channel types (from common/channels.ned)
+        @display("i=block/table");
+        string channelTypesTx;   // list of (tx) channel types (from common/channels.ned)
         string channelTypesRx; // list of (rx) channel types (from common/channels.ned)
-        bool useIPv6Addresses = default(false);
+        bool wirelessNode = default(false);
 }
