@@ -1,0 +1,35 @@
+OverSim - A Flexible Overlay Network Simulation Framework
+
+OverSim is an open-source overlay network simulation framework for the
+OMNeT++/OMNEST simulation environment. The simulator contains several
+models for structured (e.g. Chord) and unstructured (e.g. GIA)
+peer-to-peer protocols. OverSim is developed at the
+Karlsruhe Institut of Technology (KIT), Institute of Telematics.
+
+Please look into the doc/ subdirectory where you'll find installation
+instructions, the license and the API documentation.
+
+If you need help, please visit the project website: http://www.oversim.org/
+
+Disclaimer: OverSim is continuously being improved: new parts
+are added, bugs are corrected, and so on. We cannot assert that any protocol
+implemented here will work fully according to the specifications. YOU ARE
+RESPONSIBLE YOURSELF TO MAKE SURE THAT THE MODELS YOU USE IN YOUR SIMULATIONS
+WORK CORRECTLY, AND YOU'RE GETTING VALID RESULTS.
+
+The OverSim team
+
+
+INETMANET-2.0 version, Notes
+The directory of Oversim must be in the same directory that the inetmanet directory.
+
+-inetmanet-2.0
+*
+-OverSim
+
+
+The Inetmanet version uses Uint128 for store the Keys, this avoid the use of gmp library, but limits the key size to 128 bits
+If you need bigger keys you can use the gmp library if you include "#define USEGMP" in the file OverlayKey.h
+
+The files simulations/nodes_3d.xml, simulations/nodes_2d.xml and simulations/nodes_2d_15000.xml have been removed due to the size of the files, you must donwload the files from the OverSim site.
+The doc directory has been removed, if you need the information containing in this directory you must donwload from the OverSim site.
