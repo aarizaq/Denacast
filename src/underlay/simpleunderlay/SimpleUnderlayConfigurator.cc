@@ -196,11 +196,11 @@ TransportAddress* SimpleUnderlayConfigurator::createNode(NodeType type,
     IPv4InterfaceData* ifdata = new IPv4InterfaceData;
     ifdata->setIPAddress(addr.get4());
     ifdata->setNetmask(IPv4Address("255.255.255.255"));
-    InterfaceEntry* e = new InterfaceEntry;
+    InterfaceEntry* e = new InterfaceEntry(NULL);
     e->setName("dummy interface");
     e->setIPv4Data(ifdata);
 
-    IPvXAddressResolver().interfaceTableOf(node)->addInterface(e, NULL);
+    IPvXAddressResolver().interfaceTableOf(node)->addInterface(e);
 
     // create meta information
     SimpleInfo* info = new SimpleInfo(type.typeID, node->getId(), type.context);

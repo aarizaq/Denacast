@@ -146,7 +146,7 @@ void SingleHostUnderlayConfigurator::initializeUnderlay(int stage)
     te->setNetmask(IPv4Address::UNSPECIFIED_ADDRESS);
     te->setGateway(gw.get4());
     te->setInterface(ifEntry);
-    te->setType(IPv4Route::REMOTE);
+    // te->setType(IPv4Route::REMOTE);
     te->setSource(IPv4Route::MANUAL);
     rTable->addRoute(te);
 

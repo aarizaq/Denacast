@@ -24,7 +24,7 @@
 #define WANT_WINSOCK2
 #include <platdep/sockets.h>
 
-#include "IPv4Datagram_m.h"
+#include "IPv4Datagram.h"
 #include "UDPPacket.h"
 #include "IPvXAddressResolver.h"
 

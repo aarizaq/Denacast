@@ -52,7 +52,7 @@ void AccessNet::initialize(int stage)
     router.module = getParentModule();
     router.interfaceTable = IPvXAddressResolver().interfaceTableOf(getParentModule());
     router.routingTable = IPvXAddressResolver().routingTableOf(getParentModule());
-    router.IPAddress = IPvXAddressResolver().addressOf(getParentModule()).get4().getInt();
+    router.IPAddress = IPvXAddressResolver().addressOf(getParentModule());
 
     channelTypesTx = cStringTokenizer(par("channelTypesTx"), " ").asVector();
     channelTypesRx = cStringTokenizer(par("channelTypesRx"), " ").asVector();
@@ -118,7 +118,7 @@ int AccessNet::addOverlayNode(cModule* node, bool migrate)
         // Check if IP is free
         ip_test = true;
         for (uint32_t i = 0; i < overlayTerminal.size(); i++) {
-            if (overlayTerminal[i].IPAddress == ip) {
+            if (overlayTerminal[i].IPAddress == IPv4Address(ip)) {
                 ip_test = false;
                 break;
             }
@@ -126,7 +126,7 @@ int AccessNet::addOverlayNode(cModule* node, bool migrate)
 
         // found valid IP
         if (ip_test) {
-            terminal.IPAddress = IPvXAddress(ip);
+            terminal.IPAddress = IPvXAddress(IPv4Address(ip));
             lastIP = ipOffset;
             break;
         }
@@ -261,7 +261,7 @@ int AccessNet::addOverlayNode(cModule* node, bool migrate)
         re->setDestination(terminal.IPAddress.get4());
         re->setNetmask(IPv4Address(IPv4Address::ALLONES_ADDRESS));
         re->setInterface(terminal.remoteInterfaceEntry);
-        re->setType(IPv4Route::DIRECT);
+        //re->setType(IPv4Route::DIRECT);
         re->setSource(IPv4Route::MANUAL);
         router.routingTable->addRoute(re);
         terminal.remoteRoutingEntry = re;
@@ -272,7 +272,7 @@ int AccessNet::addOverlayNode(cModule* node, bool migrate)
         te->setNetmask(IPv4Address::UNSPECIFIED_ADDRESS);
         te->setGateway(router.IPAddress.get4());
         te->setInterface(terminal.interfaceEntry);
-        te->setType(IPv4Route::REMOTE);
+        //te->setType(IPv4Route::REMOTE);
         te->setSource(IPv4Route::MANUAL);
         terminal.routingTable->addRoute(te);
         terminal.routingEntry = te;

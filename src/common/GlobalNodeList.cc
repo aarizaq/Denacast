@@ -221,7 +221,7 @@ const NodeHandle& GlobalNodeList::getRandomNode(uint32_t nodeType,
                 || (bootstrappedNeeded && !it->second.info->isBootstrapped())
                 || (inoffensiveNeeded && it->second.info->isMalicious())) {
 
-            IPvXAddress randomAddr(intuniform(min_ip, max_ip));
+            IPvXAddress randomAddr(IPv4Address(intuniform(min_ip, max_ip)));
 
             it = peerSet.find(randomAddr);
 
@@ -459,7 +459,7 @@ PeerInfo* GlobalNodeList::getRandomPeerInfo(uint32_t nodeType,
     PeerHashMap::iterator it;
     bootstrapEntry tempEntry = {NULL, NULL};
 
-    IPvXAddress randomAddr(intuniform(min_ip, max_ip));
+    IPvXAddress randomAddr(IPv4Address(intuniform(min_ip, max_ip)));
 
     it = peerSet.find(randomAddr);
     if (it == peerSet.end()) {
@@ -502,7 +502,7 @@ TransportAddress* GlobalNodeList::getRandomAliveNode(uint32_t nodeType)
         PeerHashMap::iterator it;
         bootstrapEntry tempEntry = {NULL, NULL};
 
-        IPvXAddress randomAddr(intuniform(min_ip, max_ip));
+        IPvXAddress randomAddr(IPv4Address(intuniform(min_ip, max_ip)));
 
         it = peerSet.find(randomAddr);
 

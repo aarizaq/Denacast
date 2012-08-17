@@ -100,7 +100,7 @@ void InetUnderlayConfigurator::initializeUnderlay(int stage)
                     (strcmp(destNode->getModule()->getName(), "overlayAccessRouter") == 0)) {
                 //add node to bootstrap oracle
                 PeerInfo* info = new PeerInfo(0, destNode->getModule()->getId(), NULL);
-                globalNodeList->addPeer(IPvXAddress(nodeAddresses[i]), info);
+                globalNodeList->addPeer(IPvXAddress(IPv4Address(nodeAddresses[i])), info);
             }
 
 
@@ -113,7 +113,7 @@ void InetUnderlayConfigurator::initializeUnderlay(int stage)
                 defRoute->setNetmask(IPv4Address::UNSPECIFIED_ADDRESS);
                 defRoute->setGateway(IPv4Address(par("gatewayIP").stringValue()));
                 defRoute->setInterface(IPvXAddressResolver().interfaceTableOf(destNode->getModule())->getInterfaceByName("tunDev"));
-                defRoute->setType(IPv4Route::REMOTE);
+                //defRoute->setType(IPv4Route::REMOTE);
                 defRoute->setSource(IPv4Route::MANUAL);
                 IPvXAddressResolver().routingTableOf(destNode->getModule())->addRoute(defRoute);
 
@@ -121,7 +121,7 @@ void InetUnderlayConfigurator::initializeUnderlay(int stage)
                 gwRoute->setDestination(IPv4Address(par("gatewayIP").stringValue()));
                 gwRoute->setNetmask(IPv4Address(255, 255, 255, 255));
                 gwRoute->setInterface(IPvXAddressResolver().interfaceTableOf(destNode->getModule())->getInterfaceByName("tunDev"));
-                gwRoute->setType(IPv4Route::DIRECT);
+                //gwRoute->setType(IPv4Route::DIRECT);
                 gwRoute->setSource(IPv4Route::MANUAL);
                 IPvXAddressResolver().routingTableOf(destNode->getModule())->addRoute(gwRoute);
             }
@@ -167,7 +167,7 @@ void InetUnderlayConfigurator::initializeUnderlay(int stage)
                 re->setSource(IPv4Route::MANUAL);
                 re->setNetmask(mask);
                 re->setGateway(IPv4Address(next_hop_ip));
-                re->setType(IPv4Route::REMOTE);
+                //re->setType(IPv4Route::REMOTE);
 
                 rt->addRoute(re);
 
@@ -180,7 +180,7 @@ void InetUnderlayConfigurator::initializeUnderlay(int stage)
                     re2->setInterface(ie);
                     re2->setSource(IPv4Route::MANUAL);
                     re2->setNetmask(IPv4Address(255, 255, 255, 255));
-                    re2->setType(IPv4Route::DIRECT);
+                    //re2->setType(IPv4Route::DIRECT);
 
                     rt->addRoute(re2);
                 }
@@ -193,7 +193,7 @@ void InetUnderlayConfigurator::initializeUnderlay(int stage)
                     defRoute->setNetmask(IPv4Address::UNSPECIFIED_ADDRESS);
                     defRoute->setGateway(IPv4Address(next_hop_ip));
                     defRoute->setInterface(ie);
-                    defRoute->setType(IPv4Route::REMOTE);
+                    //defRoute->setType(IPv4Route::REMOTE);
                     defRoute->setSource(IPv4Route::MANUAL);
 
                     rt->addRoute(defRoute);
