@@ -28,7 +28,7 @@ import oversim.common.CryptoModule;
 import oversim.common.IOverlay;
 import oversim.common.ITier;
 import oversim.common.NeighborCache;
-import inet.linklayer.ieee80211mesh.Ieee80211NewNicMesh;
+import inet.linklayer.ieee80211mesh.Ieee80211NicMesh;
 import inet.networklayer.autorouting.ipv4.HostAutoConfigurator2;
 import inet.linklayer.IWirelessNic;
 import inet.linklayer.IWiredNic;
@@ -115,7 +115,7 @@ module OverlayAccessRouterWireless
         }
 
 
-        wlanMesh: Ieee80211NewNicMesh {
+        wlanMesh: Ieee80211NicMesh {
             parameters:
                 @display("p=257,386;q=queue");
         }
@@ -188,19 +188,19 @@ module OverlayAccessRouterWireless
 
 
         ethg[0] <--> ethMesh.phys;
-        ethMesh.netwOut --> networkLayer.ifIn++;
-        ethMesh.netwIn <-- networkLayer.ifOut++;
+        ethMesh.upperLayerOut --> networkLayer.ifIn++;
+        ethMesh.upperLayerIn <-- networkLayer.ifOut++;
 
         for i=0..sizeof(ethg)-2 {
             ethg[i+1] <--> eth[i].phys;
-            eth[i].netwOut --> networkLayer.ifIn++;
-            eth[i].netwIn <-- networkLayer.ifOut++;
+            eth[i].upperLayerOut --> networkLayer.ifIn++;
+            eth[i].upperLayerIn <-- networkLayer.ifOut++;
         }
 
         for i=0..sizeof(pppg)-1 {
             pppg[i] <--> ppp[i].phys;
-            ppp[i].netwOut --> networkLayer.ifIn[i];
-            ppp[i].netwIn <-- networkLayer.ifOut[i];
+            ppp[i].upperLayerOut --> networkLayer.ifIn[i];
+            ppp[i].upperLayerIn <-- networkLayer.ifOut[i];
         }
 
 
