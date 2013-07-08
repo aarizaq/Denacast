@@ -59,7 +59,7 @@ class ICMPv6;
  *
  * More info in the NED file.
  */
-class INET_API SimpleUDP : public UDP
+class SimpleUDP : public UDP
 {
 public:
 

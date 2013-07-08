@@ -24,27 +24,27 @@
 #include <omnetpp.h>
 
 #include "OverlayKey.h"
-#ifndef USEGMP
-
 #include "Comparator.h"
 
 #include <BinaryValue.h>
-#include <math.h>
 #include "SHA1.h"
 
 using namespace std;
 
 uint32_t OverlayKey::keyLength = MAX_KEYLENGTH;
 
-
 // TODO: replace both commands below with simpler macros without conditionals
 
 //#define ROUND_NEXT(n, div) (((n) + (div) - 1) / (div))
 //uint OverlayKey::aSize = ROUND_NEXT(OverlayKey::keyLength, 8*sizeof(mp_limb_t));
 
-uint32_t OverlayKey::aSize = sizeof(Uint128)/(sizeof(uint32_t));
+uint32_t OverlayKey::aSize = OverlayKey::keyLength / (8*sizeof(mp_limb_t)) +
+    (OverlayKey::keyLength % (8*sizeof(mp_limb_t))
+     != 0 ? 1 : 0);
 
-Uint128 OverlayKey::GMP_MSB_MASK = Uint128::UINT128_MAX;
+mp_limb_t OverlayKey::GMP_MSB_MASK = (OverlayKey::keyLength % GMP_LIMB_BITS)
+    != 0 ? (((mp_limb_t)1 << (OverlayKey::keyLength % GMP_LIMB_BITS))-1)
+    : (mp_limb_t) - 1;
 
 //--------------------------------------------------------------------
 // constants
@@ -59,42 +59,6 @@ const OverlayKey OverlayKey::ONE((uint32_t)1);
 // hex crap
 const char* HEX = "0123456789abcdef";
 
-#define GMP_NUMB_BITS 64
-#define GMP_NUMB_MASK UINT64_MAX
-#define GMP_LIMB_BITS 64
-
-static int
-mpn_set_str (uint64_t *rp, const unsigned char *str, size_t str_len)
-{
-    /* The base is a power of 2.  Read the input string from least to most
-     *              *             *      significant character/digit.  */
-    const unsigned char *s;
-    int next_bitpos;
-    uint64_t res_digit;
-    int64_t  size;
-    int bits_per_indigit = 8;
-    size = 0;
-    res_digit = 0;
-    next_bitpos = 0;
-    for (s = str + str_len - 1; s >= str; s--)
-    {
-      int inp_digit = *s;
-      res_digit |= ((uint64_t) inp_digit << next_bitpos) & GMP_NUMB_MASK;
-      next_bitpos += bits_per_indigit;
-      if (next_bitpos >= GMP_NUMB_BITS)
-        {
-          rp[size++] = res_digit;
-          next_bitpos -= GMP_NUMB_BITS;
-          res_digit = inp_digit >> (bits_per_indigit - next_bitpos);
-        }
-    }
-
-      if (res_digit != 0)
-          rp[size++] = res_digit;
-      return size;
-}
-
-
 //--------------------------------------------------------------------
 // construction and destruction
 //--------------------------------------------------------------------
@@ -108,7 +72,8 @@ OverlayKey::OverlayKey()
 // create a key out of an normal integer
 OverlayKey::OverlayKey(uint32_t num)
 {
-    key = num;
+    clear();
+    key[0] = num;
     trim();
 }
 
@@ -117,9 +82,9 @@ OverlayKey::OverlayKey(const unsigned char* buf, uint32_t size)
 {
     int trimSize, offset;
     clear();
-    trimSize = (int)min((uint32_t) (aSize * sizeof(uint32_t)), size);
-    offset = aSize * sizeof(uint32_t) - trimSize;
-    memcpy(((char*)&key) + offset, buf, trimSize);
+    trimSize = (int)min((uint32_t) (aSize * sizeof(mp_limb_t)), size);
+    offset = aSize * sizeof(mp_limb_t) - trimSize;
+    memcpy( ((char*)key) + offset, buf, trimSize);
     trim();
 }
 
@@ -129,9 +94,6 @@ OverlayKey::OverlayKey(const std::string& str, uint32_t base)
     if ((base < 2) || (base > 16)) {
         throw cRuntimeError("OverlayKey::OverlayKey(): Invalid base!");
     }
-
-    if (base != 8 && base != 16 && base != 10)
-        throw cRuntimeError("OverlayKey::OverlayKey(): Invalid base!");
 
     string s(str);
     clear();
@@ -149,34 +111,8 @@ OverlayKey::OverlayKey(const std::string& str, uint32_t base)
         }
     }
 
-    int i = 0;
-    string val;
-    int radix = 0;;
-
-    if (s [i] == '-')
-    {
-        ++i;
-    }
-
-    if (s [i] == '0')
-    {
-        radix = 8;
-        ++i;
-        if (s [i] == 'x')
-        {
-            radix = 16;
-            ++i;
-       }
-    }
-
-    if (radix != 8  && base == 8)
-        val = "0" + s;
-    else if (radix != 16 && base == 16)
-        val = "0x" + s;
-    else
-        val = s;
-
-    key.set(s.c_str());
+    mpn_set_str ((mp_limb_t*)this->key, (const unsigned char*)s.c_str(),
+		 str.size(), base);
     trim();
 }
 
@@ -203,11 +139,13 @@ void OverlayKey::setKeyLength(uint32_t length)
     }
 
     keyLength = length;
-    aSize = keyLength / (8*sizeof(uint32_t)) + ((keyLength % (8*sizeof(uint32_t)))!=0 ? 1 : 0);
-    Uint128 v = Uint128::UINT128_MAX;
-    if (length < OverlayKey::MAX_KEYLENGTH)
-        v >>= (OverlayKey::MAX_KEYLENGTH - length);
-    GMP_MSB_MASK = v;
+
+    aSize = keyLength / (8*sizeof(mp_limb_t)) +
+        (keyLength % (8*sizeof(mp_limb_t))!=0 ? 1 : 0);
+
+    GMP_MSB_MASK = (keyLength % GMP_LIMB_BITS)
+	!= 0 ? (((mp_limb_t)1 << (keyLength % GMP_LIMB_BITS))-1)
+	: (mp_limb_t)-1;
 }
 
 
@@ -224,14 +162,45 @@ bool OverlayKey::isUnspecified() const
 
 std::string OverlayKey::toString(uint32_t base) const
 {
-    if ((base != 8) && (base != 16)) {
+    if ((base != 2) && (base != 16)) {
         throw cRuntimeError("OverlayKey::OverlayKey(): Invalid base!");
     }
 
     if (isUnspec)
         return std::string("<unspec>");
-    else
-        return key.toString(base);
+    else {
+        char temp[MAX_KEYLENGTH+1];
+
+        if (base==16) {
+            int k=0;
+            for (int i=(keyLength-1)/4; i>=0; i--, k++)
+                temp[k] = HEX[this->getBitRange
+                              (4*i,4)];
+
+            temp[k] = 0;
+            return std::string((const char*)temp);
+        } else if (base==2) {
+            int k=0;
+            for (int i=keyLength-1; i>=0; i-=1, k++)
+                temp[k] = HEX[this->getBit(i)];
+            temp[k] = 0;
+            return std::string((const char*)temp);
+        } else {
+            throw cRuntimeError("OverlayKey::OverlayKey(): Invalid base!");
+        }
+
+// the following native libgmp code doesn't work with leading zeros
+#if 0
+        mp_size_t last = mpn_get_str((unsigned char*)temp, base,
+                                     (mp_limb_t*)this->key, aSize);
+        for (int i=0; i<last; i++) {
+            temp[i] = HEX[temp[i]];
+        }
+        temp[last] = 0;
+        return std::string((const char*)temp);
+#endif
+
+    }
 }
 
 //--------------------------------------------------------------------
@@ -242,44 +211,42 @@ std::string OverlayKey::toString(uint32_t base) const
 OverlayKey& OverlayKey::operator=(const OverlayKey& rhs)
 {
     isUnspec = rhs.isUnspec;
-    key = rhs.key;
+    memcpy( key, rhs.key, aSize*sizeof(mp_limb_t) );
     return *this;
 }
 
 // sub one prefix operator
 OverlayKey& OverlayKey::operator--()
 {
-    key--;
-    return *this;
+    return (*this -= ONE);
 }
 
 // sub one postfix operator
 OverlayKey OverlayKey::operator--(int)
 {
     OverlayKey clone = *this;
-    key--;
+    *this -= ONE;
     return clone;
 }
 
 // add one prefix operator
 OverlayKey& OverlayKey::operator++()
 {
-    key++;
-    return *this;
+    return (*this += ONE);
 }
 
 // sub one postfix operator
 OverlayKey OverlayKey::operator++(int)
 {
     OverlayKey clone = *this;
-    key++;
+    *this += ONE;
     return clone;
 }
 
 // add assign operator
 OverlayKey& OverlayKey::operator+=( const OverlayKey& rhs )
 {
-    key += rhs.key;
+    mpn_add_n((mp_limb_t*)key, (mp_limb_t*)key, (mp_limb_t*)rhs.key, aSize);
     trim();
     isUnspec = false;
     return *this;
@@ -288,7 +255,7 @@ OverlayKey& OverlayKey::operator+=( const OverlayKey& rhs )
 // sub assign operator
 OverlayKey& OverlayKey::operator-=( const OverlayKey& rhs )
 {
-    key -= rhs.key;
+    mpn_sub_n((mp_limb_t*)key, (mp_limb_t*)key, (mp_limb_t*)rhs.key, aSize);
     trim();
     isUnspec = false;
     return *this;
@@ -340,7 +307,10 @@ bool OverlayKey::operator!=(const OverlayKey& compKey) const
 OverlayKey OverlayKey::operator^ (const OverlayKey& rhs) const
 {
     OverlayKey result = *this;
-    result.key = this->key ^ rhs.key;
+    for (uint32_t i=0; i<aSize; i++) {
+        result.key[i] ^= rhs.key[i];
+    }
+
     return result;
 }
 
@@ -348,7 +318,10 @@ OverlayKey OverlayKey::operator^ (const OverlayKey& rhs) const
 OverlayKey OverlayKey::operator| (const OverlayKey& rhs) const
 {
     OverlayKey result = *this;
-    result.key = this->key | rhs.key;
+    for (uint32_t i=0; i<aSize; i++) {
+        result.key[i] |= rhs.key[i];
+    }
+
     return result;
 }
 
@@ -356,7 +329,10 @@ OverlayKey OverlayKey::operator| (const OverlayKey& rhs) const
 OverlayKey OverlayKey::operator& (const OverlayKey& rhs) const
 {
     OverlayKey result = *this;
-    result.key = this->key & rhs.key;
+    for (uint32_t i=0; i<aSize; i++) {
+        result.key[i] &= rhs.key[i];
+    }
+
     return result;
 }
 
@@ -364,18 +340,32 @@ OverlayKey OverlayKey::operator& (const OverlayKey& rhs) const
 OverlayKey OverlayKey::operator~ () const
 {
     OverlayKey result = *this;
-    result.key = ~(this->key);
+    for (uint32_t i=0; i<aSize; i++) {
+        result.key[i] = ~key[i];
+    }
     result.trim();
+
     return result;
 }
 
 // bitwise shift right
 OverlayKey OverlayKey::operator>>(uint32_t num) const
 {
-    OverlayKey result;
-    result.key = key >> num;
+    OverlayKey result = ZERO;
+    int i = num/GMP_LIMB_BITS;
+
+    num %= GMP_LIMB_BITS;
+
+    if (i>=(int)aSize)
+        return result;
+
+    for (int j=0; j<(int)aSize-i; j++) {
+        result.key[j] = key[j+i];
+    }
+    mpn_rshift(result.key,result.key,aSize,num);
     result.isUnspec = false;
     result.trim();
+
     return result;
 }
 
@@ -383,9 +373,20 @@ OverlayKey OverlayKey::operator>>(uint32_t num) const
 OverlayKey OverlayKey::operator<<(uint32_t num) const
 {
     OverlayKey result = ZERO;
-    result.key = key << num;
+    int i = num/GMP_LIMB_BITS;
+
+    num %= GMP_LIMB_BITS;
+
+    if (i>=(int)aSize)
+        return result;
+
+    for (int j=0; j<(int)aSize-i; j++) {
+        result.key[j+i] = key[j];
+    }
+    mpn_lshift(result.key,result.key,aSize,num);
     result.isUnspec = false;
     result.trim();
+
     return result;
 }
 
@@ -402,7 +403,16 @@ OverlayKey& OverlayKey::setBit(uint32_t pos, bool value)
                                 "pos >= keyLength!");
     }
 
-    key.bit(pos,value);
+    mp_limb_t digit = 1;
+    digit = digit << (pos % GMP_LIMB_BITS);
+
+    if (value) {
+        key[pos / GMP_LIMB_BITS] |= digit;
+    } else {
+        //key[pos / GMP_LIMB_BITS] = key[pos / GMP_LIMB_BITS] & ~digit;
+        key[pos / GMP_LIMB_BITS] &= ~digit;
+    }
+
     return *this;
 };
 
@@ -423,66 +433,62 @@ uint32_t OverlayKey::getBitRange(uint32_t p, uint32_t n) const
     if (GMP_LIMB_BITS < 32) {
         throw cRuntimeError("OverlayKey::get:  GMP_LIMB_BITS too small!");
     }
-    // IPv6Address add = this->key.getIPv6Address();
-    // const uint32_t *k = add.words();
-    const uint32_t *k = (uint32_t *) &key;
 
-    return ((k[i] >> f) |                                     // get the bits of key[i]
-            (f2 > 0 ? (k[i+1] << (GMP_LIMB_BITS - f)) : 0)) & // the extra bits from key[i+1]
+    return ((key[i] >> f) |                                     // get the bits of key[i]
+            (f2 > 0 ? (key[i+1] << (GMP_LIMB_BITS - f)) : 0)) & // the extra bits from key[i+1]
         (((uint32_t)(~0)) >> (GMP_LIMB_BITS - n));              // delete unused bits
 }
 
 double OverlayKey::toDouble() const
 {
-    return key.toDouble();
+    double result = 0;
+    uint8_t range = 32, length = getLength();
+    for (uint8_t i = 0; i < length; i += 32) {
+        if ((length - i) < 32) range = length - i;
+        result += (getBitRange(i, range) * pow(2.0, i));
+    }
+
+    return result;
 }
 
 // fill suffix with random bits
 OverlayKey OverlayKey::randomSuffix( uint32_t pos ) const
 {
-    Uint128 aux;
-    uint32_t *val;
-    val = (uint32_t *) &aux;
-    unsigned int size = sizeof(Uint128)/sizeof(uint32_t);
-    for (unsigned int i = 0; i<size;i++)
-        val[i] = intuniform(0, 0xFFFFFFFF);
-    OverlayKey newKey;
+    OverlayKey newKey = *this;
+    int i = pos/GMP_LIMB_BITS, j = pos%GMP_LIMB_BITS;
+    mp_limb_t m = ((mp_limb_t)1 << j)-1;
+    mp_limb_t rnd;
 
-    Uint128 mask = Uint128::UINT128_MAX << pos;
-    mask = mask & GMP_MSB_MASK;
-    Uint128 valAux = this->key & mask;
-
-    newKey.key = aux;
-    newKey.isUnspec = this->isUnspec;
-    newKey.key >>= OverlayKey::MAX_KEYLENGTH-pos;
-    newKey.key |= valAux;
+    //  mpn_random(&rnd,1);
+    omnet_random(&rnd,1);
+    newKey.key[i] &= ~m;
+    newKey.key[i] |= (rnd&m);
+    //  mpn_random(newKey.key,i);
+    omnet_random(newKey.key,i);
     newKey.trim();
+
     return newKey;
 }
 
 // fill prefix with random bits
 OverlayKey OverlayKey::randomPrefix( uint32_t pos ) const
 {
-    Uint128 aux;
-    uint32_t *val;
-    val = (uint32_t *) &aux;
-    unsigned int size = sizeof(Uint128)/sizeof(uint32_t);
-    for (unsigned int i = 0; i<size;i++)
-        val[i] = intuniform(0, 0xFFFFFFFF);
+    OverlayKey newKey = *this;
+    int i = pos/GMP_LIMB_BITS, j = pos%GMP_LIMB_BITS;
+    mp_limb_t m = ((mp_limb_t)1 << j)-1;
+    mp_limb_t rnd;
 
-    OverlayKey newKey;
+    //  mpn_random(&rnd,1);
+    omnet_random(&rnd,1);
 
-    Uint128 mask = Uint128::UINT128_MAX << pos;
-    mask = ~mask;
-
-    mask = mask & GMP_MSB_MASK;
-    Uint128 valAux = this->key & mask;
-
-    newKey.key = aux;
-    newKey.isUnspec = this->isUnspec;
-    newKey.key <<= OverlayKey::MAX_KEYLENGTH-pos;
-    newKey.key |= valAux;
+    newKey.key[i] &= m;
+    newKey.key[i] |= (rnd&~m);
+    for (int k=aSize-1; k!=i; k--) {
+        //        mpn_random( &newKey.key[k], 1 );
+        omnet_random( &newKey.key[k], 1 );
+    }
     newKey.trim();
+
     return newKey;
 }
 
@@ -490,46 +496,57 @@ OverlayKey OverlayKey::randomPrefix( uint32_t pos ) const
 uint32_t OverlayKey::sharedPrefixLength(const OverlayKey& compKey,
                                         uint32_t bitsPerDigit) const
 {
-    if (compareTo(compKey) == 0) return (keyLength/bitsPerDigit);
-    uint32_t length = 0;
+    if (compareTo(compKey) == 0) return keyLength;
 
-    for (unsigned int i = 127;i>=0;i--)
-    {
-        if (this->key.bit(i) == compKey.key.bit(i))
-            length ++;
-        else
+    uint32_t length = 0;
+    int i;
+    uint32_t j;
+    bool msb = true;
+
+    // count equal limbs first:
+    for (i=aSize-1; i>=0; --i) {
+        if (this->key[i] != compKey.key[i]) {
+            // XOR first differing limb for easy counting of the bits:
+            mp_limb_t d = this->key[i] ^ compKey.key[i];
+            if (msb) d <<= ( GMP_LIMB_BITS - (keyLength % GMP_LIMB_BITS) );
+            for (j = GMP_LIMB_BITS-1; d >>= 1; --j);
+            length += j;
             break;
+        }
+        length += GMP_LIMB_BITS;
+        msb = false;
     }
+
     return length / bitsPerDigit;
 }
 
 // calculate log of base 2
 int OverlayKey::log_2() const
 {
-
-    OverlayKey aux = *this;
-    aux.trim();
-    if (aux.key==Uint128::UINT128_MIN)
-        return -1;
-
-    uint32_t *k;
-    k = (uint32_t *) &(this->key);
-
     int16_t i = aSize-1;
 
-    uint32_t j = k[i];
+    while (i>=0 && key[i]==0) {
+        i--;
+    }
+
+    if (i<0) {
+        return -1;
+    }
+
+    mp_limb_t j = key[i];
     i *= GMP_LIMB_BITS;
     while (j!=0) {
         j >>= 1;
         i++;
     }
+
     return i-1;
 }
 
 // returns a simple hash of the key
 size_t OverlayKey::hash() const
 {
-    return (size_t)key.toUint();
+    return (size_t)key[0];
 }
 
 // returns true, if this key is element of the interval (keyA, keyB)
@@ -608,23 +625,25 @@ std::ostream& operator<<(std::ostream& os, const OverlayKey& c)
 OverlayKey OverlayKey::getMax()
 {
     OverlayKey newKey;
-    newKey.key = Uint128::UINT128_MAX;
+
+    for (uint32_t i=0; i<aSize; i++) {
+        newKey.key[i] = ~0;
+    }
     newKey.isUnspec = false;
     newKey.trim();
+
     return newKey;
 }
 
 // generate random number
 OverlayKey OverlayKey::random()
 {
-    uint32_t val[4];
+    OverlayKey newKey = ZERO;
 
-    OverlayKey newKey;
-    for (unsigned int i = 0; i<4;i++)
-          val[i] = intuniform(0, 0xFFFFFFFF);
-    memcpy(&newKey.key,val,sizeof(Uint128));
-    newKey.isUnspec = false;
+    omnet_random(newKey.key,aSize);
+
     newKey.trim();
+
     return newKey;
 }
 
@@ -639,10 +658,8 @@ OverlayKey OverlayKey::sha1(const BinaryValue& input)
     sha1.Update((uint8_t*)(&(*input.begin())), input.size());
     sha1.Final();
     sha1.GetHash(temp);
-    uint64_t  *ptr = (uint64_t *) &newKey.key;
-
-    mpn_set_str(ptr, (const uint8_t*)temp,
-                (int)std::min((uint32_t)(aSize * sizeof(uint32_t)), 16U));
+    mpn_set_str(newKey.key, (const uint8_t*)temp,
+                (int)std::min((uint32_t)(aSize * sizeof(mp_limb_t)), 20U), 256);
     newKey.isUnspec = false;
     newKey.trim();
 
@@ -652,15 +669,16 @@ OverlayKey OverlayKey::sha1(const BinaryValue& input)
 // generate a key=2**exponent
 OverlayKey OverlayKey::pow2( uint32_t exponent )
 {
-
     if (exponent >= keyLength) {
         throw cRuntimeError("OverlayKey::pow2(): "
                                 "exponent >= keyLength!");
     }
 
     OverlayKey newKey = ZERO;
-    newKey.key = 2;
-    newKey.key <<=(exponent-1);
+
+    newKey.key[exponent/GMP_LIMB_BITS] =
+        (mp_limb_t)1 << (exponent % GMP_LIMB_BITS);
+
     return newKey;
 }
 
@@ -727,12 +745,8 @@ void OverlayKey::test()
 
     cout << "KeyRingMetric::distance(1, max)="
          <<  KeyRingMetric().distance(OverlayKey::ONE, OverlayKey::getMax()) << endl;
-    cout << "KeyUniRingMetric::distance(1, max)="
-         <<  KeyUniRingMetric().distance(OverlayKey::ONE, OverlayKey::getMax()) << endl;
     cout << "KeyRingMetric::distance(max, 1)="
          <<  KeyRingMetric().distance(OverlayKey::getMax(), OverlayKey::ONE) << endl;
-    cout << "KeyUniRingMetric::distance(max, 1)="
-         <<  KeyUniRingMetric().distance(OverlayKey::getMax(), OverlayKey::ONE) << endl;
 
     // suffix and log2 test
     cout << endl << "--- RandomSuffix and log2 test ..." << endl;
@@ -780,7 +794,7 @@ void OverlayKey::test()
 // trims a key after each operation
 inline void OverlayKey::trim()
 {
-    key &= GMP_MSB_MASK;
+    key[aSize-1] &= GMP_MSB_MASK;
 }
 
 
@@ -789,21 +803,36 @@ int OverlayKey::compareTo( const OverlayKey& compKey ) const
 {
     if (compKey.isUnspec || isUnspec)
         opp_error("OverlayKey::compareTo(): key is unspecified!");
-    if (key < compKey.key)
-        return -1;
-    else if (key > compKey.key)
-            return 1;
-    else
-        return 0;
+    return mpn_cmp(key,compKey.key,aSize);
 }
 
 // sets key to zero and clears unspecified bit
 inline void OverlayKey::clear()
 {
-    key = 0;
+    memset( key, 0, aSize * sizeof(mp_limb_t) );
     isUnspec = false;
 }
 
+// replacement function for mpn_random() using omnet's rng
+inline void omnet_random(mp_limb_t *r1p, mp_size_t r1n)
+{
+    // fill in 32 bit chunks
+    uint32_t* chunkPtr = (uint32_t*)r1p;
+
+    for (uint32_t i=0; i < ((r1n*sizeof(mp_limb_t) + 3) / 4); i++) {
+        chunkPtr[i] = intuniform(0, 0xFFFFFFFF);
+    }
+}
+
+#ifdef __GMP_SHORT_LIMB
+#define GMP_TYPE unsigned int
+#else
+#ifdef _LONG_LONG_LIMB
+#define GMP_TYPE unsigned long long int
+#else
+#define GMP_TYPE unsigned long int
+#endif
+#endif
 
 void OverlayKey::netPack(cCommBuffer *b)
 {
@@ -811,7 +840,8 @@ void OverlayKey::netPack(cCommBuffer *b)
               //(MAX_KEYLENGTH % (8*sizeof(mp_limb_t))!=0 ? 1 : 0));
     // Pack an OverlayKey as uint32_t array and hope for the best
     // FIXME: This is probably not exactly portable
-    doPacking(b,(uint32_t*)&this->key, sizeof(Uint128));
+    doPacking(b,(uint32_t*)this->key, MAX_KEYLENGTH / (8*sizeof(uint32_t)) +
+              (MAX_KEYLENGTH % (8*sizeof(uint32_t))!=0 ? 1 : 0));
     doPacking(b,this->isUnspec);
 }
 
@@ -819,8 +849,9 @@ void OverlayKey::netUnpack(cCommBuffer *b)
 {
     //doUnpacking(b,(GMP_TYPE*)this->key, MAX_KEYLENGTH / (8*sizeof(mp_limb_t)) +
                 //(MAX_KEYLENGTH % (8*sizeof(mp_limb_t))!=0 ? 1 : 0));
-    doUnpacking(b,(uint32_t*)&this->key, sizeof(Uint128));
+    doUnpacking(b,(uint32_t*)this->key, MAX_KEYLENGTH / (8*sizeof(uint32_t)) +
+                (MAX_KEYLENGTH % (8*sizeof(uint32_t))!=0 ? 1 : 0));
     doUnpacking(b,this->isUnspec);
 
 }
-#endif
+

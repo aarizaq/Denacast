@@ -485,7 +485,7 @@ public://methods: sorted add support
                 }
                 if (i == std::vector<T>::end()) {
                     pos = std::vector<T>::size();
-                    push_back(element);
+                    this->push_back(element);
                 }
             } else {
                 for (iterator i = std::vector<T>::begin(); i != std::vector<T>::end();
@@ -496,7 +496,7 @@ public://methods: sorted add support
                     }
                 }
                 pos = std::vector<T>::size();
-                push_back(element);
+                this->push_back(element);
             }
 
             // adjust size

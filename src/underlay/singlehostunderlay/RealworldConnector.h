@@ -62,7 +62,7 @@ inline u_short cksum(uint16_t *buf, int nbytes)
  * RealworldConnector is a pseudo interface that allows communcation with the real world
  * through the TunOutScheduler
  */
-class INET_API RealworldConnector : public cSimpleModule
+class RealworldConnector : public cSimpleModule
 {
 protected:
 
