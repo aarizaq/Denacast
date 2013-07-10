@@ -35,4 +35,5 @@ simple DenaCastOverlay extends BaseOverlay
 	    double pMax;
 	    bool FEC; 		// true if we want to have FEC
 	    bool ARQ;		// true if we want to have Retransmission
+	    int denacastSourceNodeType;
 }

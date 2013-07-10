@@ -34,6 +34,8 @@ module CDNP2PtrackerModules like IOverlay
         output udpOut;    // gate to the UDP layer
         input appIn;   // gate from the application
         output appOut;    // gate to the application
+        input tcpIn;    // gate from the TCP layer
+        output tcpOut;    // gate to the TCP layer
 
     submodules:
         cdnp2ptracker: CDNP2PTracker;
@@ -42,4 +44,6 @@ module CDNP2PtrackerModules like IOverlay
         udpOut <-- cdnp2ptracker.udpOut;
         appIn --> cdnp2ptracker.appIn;
         appOut <-- cdnp2ptracker.appOut;
+        tcpIn --> cdnp2ptracker.tcpIn;
+        tcpOut <-- cdnp2ptracker.tcpOut;
 }

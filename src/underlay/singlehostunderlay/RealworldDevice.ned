@@ -30,7 +30,7 @@ package oversim.underlay.singlehostunderlay;
 moduleinterface RealworldDevice
 {
     parameters:
-        int mtu @unit("B");    // maximum transmission unit of the underlaying network
+        int mtu @unit(B);    // maximum transmission unit of the underlaying network
 
     gates:
         input netwIn;    // incoming gate from network

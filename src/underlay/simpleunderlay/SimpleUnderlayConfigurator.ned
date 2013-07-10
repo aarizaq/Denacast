@@ -35,4 +35,5 @@ simple SimpleUnderlayConfigurator extends UnderlayConfigurator
         string nodeCoordinateSource; // name of xml-file with coordinates of nodes
         int sendQueueLength @unit(B); // send-queue length in bytes (0 = infinite)
         bool fixedNodePositions; // put nodes on fixed coordiantes in playground
+        bool useIPv6Addresses;
 }

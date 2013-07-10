@@ -34,6 +34,7 @@ import oversim.common.NeighborCache;
 module SimpleOverlayHost
 {
     parameters:
+        @node;
         string overlayType; // overlay protocol compound module to use
         string tier1Type; // tier 1 application to use
         string tier2Type; // tier 2 module to use
@@ -60,11 +61,15 @@ module SimpleOverlayHost
         }
         overlay: <overlayType> like IOverlay {
             parameters:
-                @display("p=370,216;i=block/network2");
+                @display("p=382,193;i=block/network2");
         }
         udp: SimpleUDP {
             parameters:
-                @display("p=370,342");
+                @display("p=382,305");
+        }
+        tcp: SimpleTCP {
+            parameters:
+                @display("p=286,305");
         }
         cryptoModule: CryptoModule {
             parameters:
@@ -72,38 +77,47 @@ module SimpleOverlayHost
         }
         notificationBoard: NotificationBoard {
             parameters:
-                @display("p=64,224");
+                @display("p=64,232");
         }
         interfaceTable: InterfaceTable {
             parameters:
-                @display("p=64,294");
+                @display("p=64,305");
         }
         neighborCache: NeighborCache {
             parameters:
-                @display("p=179,294");
+                @display("p=179,305");
         }
         bootstrapList: BootstrapList {
             parameters:
-                @display("p=179,224");
+                @display("p=179,232");
         }
     connections allowunconnected:
-        tier1.to_lowerTier --> overlay.appIn if numTiers>0;
-        tier1.from_lowerTier <-- overlay.appOut if numTiers>0;
-        tier1.udpOut --> udp.appIn++ if numTiers>0;
-        udp.appOut++ --> tier1.udpIn if numTiers>0;
+        tier1.to_lowerTier --> overlay.appIn if numTiers > 0;
+        tier1.from_lowerTier <-- overlay.appOut if numTiers > 0;
+        tier1.udpOut --> udp.appIn++ if numTiers > 0;
+        udp.appOut++ --> tier1.udpIn if numTiers > 0;
+        tier1.tcpOut --> tcp.appIn++ if numTiers > 0;
+        tcp.appOut++ --> tier1.tcpIn if numTiers > 0;
 
         tier2.to_lowerTier --> tier1.from_upperTier if numTiers > 1;
         tier2.from_lowerTier <-- tier1.to_upperTier if numTiers > 1;
-        tier2.udpOut --> udp.appIn++ if numTiers>1;
-        udp.appOut++ --> tier2.udpIn if numTiers>1;
+        tier2.udpOut --> udp.appIn++ if numTiers > 1;
+        udp.appOut++ --> tier2.udpIn if numTiers > 1;
+        tier2.tcpOut --> tcp.appIn++ if numTiers > 1;
+        tcp.appOut++ --> tier2.tcpIn if numTiers > 1;
 
         tier3.to_lowerTier --> tier2.from_upperTier if numTiers > 2;
         tier3.from_lowerTier <-- tier2.to_upperTier if numTiers > 2;
-        tier3.udpOut --> udp.appIn++ if numTiers>2;
-        udp.appOut++ --> tier3.udpIn if numTiers>2;
+        tier3.udpOut --> udp.appIn++ if numTiers > 2;
+        udp.appOut++ --> tier3.udpIn if numTiers > 2;
+        tier3.tcpOut --> tcp.appIn++ if numTiers > 2;
+        tcp.appOut++ --> tier3.tcpIn if numTiers > 2;
 
         overlay.udpOut --> udp.appIn++;
         overlay.udpIn <-- udp.appOut++;
+
+        overlay.tcpOut --> tcp.appIn++;
+        overlay.tcpIn <-- tcp.appOut++;
 
         bootstrapList.udpOut --> udp.appIn++;
         bootstrapList.udpIn <-- udp.appOut++;

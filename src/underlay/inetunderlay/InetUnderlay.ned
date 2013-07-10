@@ -17,10 +17,9 @@
 
 package oversim.underlay.inetunderlay;
 
-import oversim.common.ChurnGenerator;
-import oversim.common.GlobalObserver;
-import oversim.common.GlobalStatistics;
 import oversim.common.inet_fiberline;
+import oversim.common.GlobalObserver;
+import oversim.common.ChurnGenerator;
 
 
 //
@@ -40,18 +39,22 @@ network InetUnderlayNetwork
         int outRouterNum;    // set to 1 if you want to use a TunOutRouter as connection to a real network
         double connectivity;    // degree of connectivity of backbone routers (1 = every backbone router is connected to all the others)
     submodules:
-        overlayTerminal[0]: InetOverlayHost { @dynamic; }
+        overlayTerminal[0]: InetOverlayHost {
+            @dynamic;
+        }
         underlayConfigurator: InetUnderlayConfigurator {
             @display("p=70,160");
         }
         backboneRouter[backboneRouterNum]: Router {
             parameters:
-                @display("i=device/server2");
+                @display("i=device/server2;p=452,187");
         }
-        outRouter[min(1, outRouterNum)]: TunOutRouter;
+        outRouter[min(1, outRouterNum)]: TunOutRouter {
+            @display("p=495,130");
+        }
         accessRouter[accessRouterNum]: AccessRouter {
             parameters:
-                @display("i=device/server2,gray,30");
+                @display("i=device/server2,gray,30;p=280,226");
         }
         overlayAccessRouter[overlayAccessRouterNum]: OverlayAccessRouter {
             parameters:
@@ -59,7 +62,7 @@ network InetUnderlayNetwork
                 tier1Type = tier1Type;    // the application on top off the overly used in the simulation
                 tier2Type = tier2Type;    // tier 2 module to use
                 tier3Type = tier3Type;    // tier 3 module to use
-                @display("i=device/server2,gray,30;i2=block/circle_s");
+                @display("i=device/server2,gray,30;i2=block/circle_s;p=521,306");
         }
         overlayBackboneRouter[overlayBackboneRouterNum]: OverlayRouter {
             parameters:

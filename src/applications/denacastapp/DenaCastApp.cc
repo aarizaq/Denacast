@@ -45,7 +45,7 @@ void DenaCastApp::initializeApp(int stage)
 	numOfBFrame = par("numOfBFrame");
 	bufferMapExchangePeriod = par("bufferMapExchangePeriod");
 	gopSize = par("gopSize");
-    if(globalNodeList->getPeerInfo(thisNode.getIp())->getTypeID() == 2)
+    if(globalNodeList->getPeerInfo(thisNode.getIp())->getTypeID() == par("denacastSourceNodeType").longValue())
     	isVideoServer = true;
     else
     	isVideoServer = false;

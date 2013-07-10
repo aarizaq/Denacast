@@ -37,14 +37,15 @@ void Vivaldi::init(NeighborCache* neighborCache)
     coordC = neighborCache->par("vivaldiCoordConst");
     dimension = neighborCache->par("vivaldiDimConst");
     enableHeightVector = neighborCache->par("vivaldiEnableHeightVector");
-    showVivaldiPosition = neighborCache->par("showVivaldiPosition");
+    showPosition = neighborCache->par("vivaldiShowPosition");
 
     // init variables
     VivaldiCoordsInfo::setDimension(dimension);
     ownCoords = new VivaldiCoordsInfo();
 
     for (uint32_t i = 0; i < dimension; i++) {
-        ownCoords->setCoords(i, uniform(-.2, .2));
+        //ownCoords->setCoords(i, uniform(-.2, .2));
+        ownCoords->setCoords(i, uniform(-200, 200));
     }
     if (enableHeightVector) ownCoords->setHeightVector(0.0);
 
@@ -61,6 +62,8 @@ void Vivaldi::processCoordinates(const simtime_t& rtt,
                   << rtt << std::endl;
         return;
     }
+
+    //double dblrtt = SIMTIME_DBL(rtt);// * 1000; // s -> ms
 
     if (!dynamic_cast<const VivaldiCoordsInfo*>(&nodeInfo)) {
         throw cRuntimeError("Vivaldi coords needed!");
@@ -84,10 +87,15 @@ void Vivaldi::processCoordinates(const simtime_t& rtt,
     // update local coordinates
     if (dist > 0) {
         for (uint8_t i = 0; i < dimension; i++) {
-            ownCoords->setCoords(i, ownCoords->getCoords(i) +
-                                    (delta * (SIMTIME_DBL(rtt) - dist)) *
-                                    ((ownCoords->getCoords(i) - info.getCoords(i)) /
-                                     dist));
+            // old calculation based on s not ms
+            //ownCoords->setCoords(i, ownCoords->getCoords(i) +
+            //                     (delta * (SIMTIME_DBL(rtt) - dist)) *
+            //                     ((ownCoords->getCoords(i) - info.getCoords(i)) /
+            //                             dist));
+            ownCoords->setCoords(i, ((ownCoords->getCoords(i) / 1000) +
+                                     (delta * (SIMTIME_DBL(rtt) - dist)) *
+                                     ((ownCoords->getCoords(i) - info.getCoords(i)) /
+                                             (dist * 1000))) * 1000);
         }
         if(enableHeightVector) {
             ownCoords->setHeightVector(ownCoords->getHeightVector() +
@@ -152,11 +160,11 @@ void Vivaldi::updateDisplay()
     neighborCache->getDisplayString().setTagArg("t", 0, buf);
 
     // show nodes at estimated position TODO
-    if (showVivaldiPosition) {
+    if (showPosition) {
         for (uint32_t i = 0; i < dimension; i++)
             neighborCache->getParentModule()
                 ->getDisplayString().setTagArg("p", i,
-                                               ownCoords->getCoords(i) * 1000);
+                                           ownCoords->getCoords(i)/* * 1000*/);
     }
 }
 

@@ -31,31 +31,19 @@
 #include <omnetpp.h>
 
 #include <ChurnGenerator.h>
-#include <HashFunc.h>
+
 #include <BinaryValue.h>
 #include <NodeHandle.h>
+#include <PeerStorage.h>
 
-class PeerInfo;
 class BootstrapList;
 class TransportAddress;
 class OverlayKey;
 class GlobalStatistics;
 
-/**
- * bootstrapEntry consists of
- * TransportAddress and PeerInfo
- * and is used (together with
- * IPvXAddress) as an entry in the peerSet
- */
-struct bootstrapEntry
-{
-    TransportAddress* node;
-    PeerInfo* info;
-    friend std::ostream& operator<<(std::ostream& Stream, const bootstrapEntry entry);
-};
 
 /**
- * Global module (formerly known as GlobalNodeList) that supports the node
+ * Global module (formerly known as BootstrapList) that supports the node
  * bootstrap process and contains node specific underlay parameters,
  * malicious node states, etc...
  *
@@ -68,11 +56,6 @@ public:
      * holds all OverlayKeys
      */
     typedef std::vector<OverlayKey> KeyList;
-
-    /**
-     * Destructor
-     */
-    ~GlobalNodeList();
 
     /**
      * Adds new peers to the peer set.
@@ -108,13 +91,16 @@ public:
      * Returns a random NodeHandle from the peerSet if at least one peer has
      * been registered, an empty TransportAddress otherwise.
      *
-     * @param nodeType If != 0, return a node of that type
+     * @param nodeType If != -1, return a node of that type
      * @param bootstrappedNeeded does the node need to be bootstrapped?
      * @param inoffensiveNeeded does the node need to be inoffensive?
+     * @param overlayId id of the overlay. Is used to support
+     *                  multiple disjoint overlays. -1 means any overlayId.
      *
      * @return NodeHandle of the node
      */
-    virtual const NodeHandle& getRandomNode(uint32_t nodeType = 0,
+    virtual const NodeHandle& getRandomNode(int32_t overlayId = -1,
+                                            int32_t nodeType = -1,
                                             bool bootstrappedNeeded = true,
                                             bool inoffensiveNeeded = false);
 
@@ -124,42 +110,47 @@ public:
      * Returns a random NodeHandle of an already bootstrapped node from the
      * peerSet if at least one peer has been registered, an empty
      * TransportAddress otherwise. If the optional node parameter is given,
-     * try to return a bootstrap node in the same partition.
+     * try to return a bootstrap node with the same TypeID.
      *
-     * @param node Find a bootstrap node in the same partitions as node
+     * @param node Find a bootstrap node with the same TypeID (partition) as node
+     * @param overlayId id of the overlay. Is used to support
+     *                  multiple disjoint overlays. -1 means any overlayId.
      * @return NodeHandle of the bootstrap node
      */
-    virtual const NodeHandle& getBootstrapNode(const NodeHandle &node =
+    virtual const NodeHandle& getBootstrapNode(int32_t overlayId = -1,
+                                               const NodeHandle &node =
                                                NodeHandle::UNSPECIFIED_NODE);
 
     /**
      * Bootstraps peers in the peer set.
      *
      * @param peer node to register
+     * @param overlayId id of the overlay. Is used to support
+     *                  multiple disjoint overlays. Default is 0.
      */
-    virtual void registerPeer(const TransportAddress& peer);
-
-    /**
-     * Bootstraps peers in the peer set.
-     *
-     * @param peer node to register
-     */
-    virtual void registerPeer(const NodeHandle& peer);
+    virtual void registerPeer(const NodeHandle& peer,
+                              int32_t overlayId = 0);
 
 
     /**
      * Update entry to real port without having bootstrapped
      *
      * @param peer node to refresh
+     * @param overlayId id of the overlay. Is used to support
+     *                  multiple disjoint overlays. Default is 0.
      */
-    virtual void refreshEntry(const TransportAddress& peer);
+    virtual void refreshEntry(const TransportAddress& peer,
+                              int32_t overlayId = 0);
 
     /**
      * Debootstraps peers in the peer set
      *
      * @param peer node to remove
+     * @param overlayId id of the overlay. Is used to support
+     *                  multiple disjoint overlays. Default is 0.
      */
-    virtual void removePeer(const TransportAddress& peer);
+    virtual void removePeer(const TransportAddress& peer,
+                            int32_t overlayId = 0);
 
     /**
      * Returns a keylist
@@ -174,7 +165,7 @@ public:
      *
      * @return the key
      */
-    virtual const OverlayKey& getRandomKeyListItem() const;
+    virtual const OverlayKey& getRandomKeyListItem();
 
     /**
      * Colors module-icon blue (ready), green (ready, malicious) or red (not ready)
@@ -221,19 +212,21 @@ public:
      * Selects a random node from the peerSet, which is not
      * already marked for deletion
      *
-     * @param nodeType If != 0, return a node of that type
+     * @param nodeType If != -1, return a node of that type
      * @returns A pointer to the TransportAddress of a random alive node
      */
-     TransportAddress* getRandomAliveNode(uint32_t nodeType = 0);
+     TransportAddress* getRandomAliveNode(int32_t  = -1,
+                                          int32_t  = -1);
 
     /**
      * Selects a random node from the peerSet
      *
-     * @param nodeType If != 0, return a node of that type
+     * @param nodeType If != -1, return a node of that type
      * @param bootstrapNeeded does the node need to be bootstrapped?
      * @returns The peerInfo of a random node
      */
-    virtual PeerInfo* getRandomPeerInfo(uint32_t nodeType = 0,
+    virtual PeerInfo* getRandomPeerInfo(int32_t overlayId = -1,
+                                        int32_t nodeType = -1,
                                         bool bootstrapNeeded = false);
 
     /**
@@ -244,20 +237,21 @@ public:
      */
     virtual PeerInfo* getPeerInfo(const IPvXAddress& ip);
 
-    size_t getNumNodes() { return peerSet.size(); };
+    size_t getNumNodes() { return peerStorage.size(); };
 
-    bool areNodeTypesConnected(uint32_t a, uint32_t b);
-    void connectNodeTypes(uint32_t a, uint32_t b);
-    void disconnectNodeTypes(uint32_t a, uint32_t b);
+    bool areNodeTypesConnected(int32_t a, int32_t b);
+    void connectNodeTypes(int32_t a, int32_t b);
+    void disconnectNodeTypes(int32_t a, int32_t b);
     void mergeBootstrapNodes(int toPartition, int fromPartition, int numNodes);
 
     inline void incLandmarkPeerSize() { landmarkPeerSize++; }
     inline uint16_t getLandmarkPeerSize() { return landmarkPeerSize; }
     inline void incLandmarkPeerSizePerType(uint16_t type) { landmarkPeerSizePerType[type]++; }
-    inline uint32_t getBootstrappedPeerSize() { return bootstrappedPeerSize; }
+
+    std::vector<IPvXAddress>* getAllIps();
+    NodeHandle* getNodeHandle(const IPvXAddress& address);
 
 protected:
-
     /**
      * Init member function of module
      */
@@ -278,24 +272,19 @@ protected:
     virtual void createKeyList(uint32_t size);
 
     KeyList keyList; /**< the keylist */
-    uint32_t bootstrappedPeerSize; /**< number of bootstrapped peers in the peer set */
-    uint32_t bootstrappedPeerSizePerType[MAX_NODETYPES]; /**< number of bootstrapped peers of all types */
     uint16_t landmarkPeerSize;
     uint16_t landmarkPeerSizePerType[MAX_NODETYPES];
-    uint32_t bootstrappedMaliciousNodes; /**< number of bootstrapped malicious nodes in the peer set */
-    uint32_t maliciousNodes; /**< number of malicious nodes in the peer set */
     uint32_t preKilledNodes; /**< number of nodes marked for deletion in the peer set */
     double maliciousNodeRatio; /**< ratio of current malicious nodes when changing the ratio dynamically */
     cOutVector maliciousNodesVector; /**< vector that records the cange of malicious node rate */
-    typedef UNORDERED_MAP<IPvXAddress, bootstrapEntry> PeerHashMap; /**< Set of nodes participating in the overlay */
-    PeerHashMap peerSet; /**< Set of nodes participating in the overlay */
+    PeerStorage peerStorage; /**< Set of nodes participating in the overlay */
 
     // key distribution parameters TODO should be put into an other module
     uint32_t maxNumberOfKeys; /**< parameter used by createKeyList() */
     double keyProbability; /**< probability of keys to be owned by nodes */
+    bool isKeyListInitialized;
 
 private:
-    uint32 min_ip, max_ip; /**< used for random node choosing */
     GlobalStatistics* globalStatistics; /**< pointer to GlobalStatistics module in this node */
     bool connectionMatrix[MAX_NODETYPES][MAX_NODETYPES]; /**< matrix specifices with node types (partitions) can communication */
 };

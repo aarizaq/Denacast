@@ -56,7 +56,7 @@ double Vector2D::distanceSqr(const Vector2D v) const
 
 double Vector2D::xyMaxDistance(const Vector2D v) const
 {
-    return std::max(abs(x - v.x), abs(y - v.y));
+    return std::max(fabs(x - v.x), fabs(y - v.y));
 }
 
 double Vector2D::cosAngle(const Vector2D& v) const

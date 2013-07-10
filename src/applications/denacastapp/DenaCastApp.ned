@@ -48,6 +48,7 @@ simple DenaCastApp extends BaseApp
         int senderSideSchedulingNumber;
         int chunkSize @unit(Frames);
         double averageChunkLength @unit(Kb);
+        int denacastSourceNodeType;
         @display("i=block/transport");	
 }
 

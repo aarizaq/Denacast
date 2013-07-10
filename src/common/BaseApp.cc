@@ -116,6 +116,9 @@ void BaseApp::initialize(int stage)
 
         // init rpcs
         initRpcs();
+
+        // set TCP output gate
+        setTcpOut(gate("tcpOut"));
     }
 
     if ((stage >= MIN_STAGE_APP && stage <= MAX_STAGE_APP) ||
@@ -169,9 +172,11 @@ void BaseApp::handleMessage(cMessage* msg)
             << udpDataIndication->getSrcAddr() << endl;
         }
         handleUDPMessage(msg);
+    } else if(msg->arrivedOn("tcpIn")) {
+        handleTCPMessage(msg);
     } else if (msg->arrivedOn("trace_in")) {
         handleTraceMessage(msg);
-    } else {
+    }else {
         delete msg;
     }
 }
@@ -257,10 +262,10 @@ void BaseApp::callRoute(const OverlayKey& key, cPacket* msg,
     // debug message
     if (debugOutput && !ev.isDisabled()) {
         EV << "[BaseApp::callRoute() @ " << thisNode.getIp()
-        << " (" << overlay->getThisNode().getKey().toString(16) << ")]\n"
-        << "    Sending " << *msg
-        << " to destination key " << key
-        << " with source route ";
+           << " (" << overlay->getThisNode().getKey().toString(16) << ")]\n"
+           << "    Sending " << *msg
+           << " to destination key " << key
+           << " with source route ";
 
         for (uint32_t i = 0; i < sourceRoute.size(); ++i) {
             EV << sourceRoute[i] << " ";
@@ -514,8 +519,6 @@ void BaseApp::sendMessageToUDP(const TransportAddress& destAddr, cPacket *msg)
         << "    Sending " << *msg << " to " << destAddr.getIp()
         << endl;
     }
-
-
     RECORD_STATS(numUdpSent++; bytesUdpSent += msg->getByteLength());
     socket.sendTo(msg,destAddr.getIp(),destAddr.getPort());
 }

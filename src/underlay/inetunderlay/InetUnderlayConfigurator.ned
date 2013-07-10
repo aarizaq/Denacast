@@ -39,7 +39,9 @@ simple InetUnderlayConfigurator extends UnderlayConfigurator
 {
     parameters:
         @class(InetUnderlayConfigurator);
-        string startIP; // IP configuration starts with this IP
+        string startIPv4; // IP configuration starts with this IP
+        string startIPv6; 
         string gatewayIP; // IP of the gateway (if an outRouter is used)
+        bool useIPv6Addresses = default(false);
 }
 

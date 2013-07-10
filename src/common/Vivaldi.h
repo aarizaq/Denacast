@@ -49,8 +49,7 @@ class Vivaldi : public AbstractNcs
     double errorC;
     double coordC;
 
-    //bool useSVivaldi;
-    bool showVivaldiPosition;
+    bool showPosition;
 
     virtual void finishVivaldi();
 
@@ -66,7 +65,6 @@ class Vivaldi : public AbstractNcs
   public:
     virtual ~Vivaldi() { delete ownCoords; };
 
-    virtual bool isAdapting() { return true; };
     virtual void init(NeighborCache* neighborCache);
     void processCoordinates(const simtime_t& rtt,
                             const AbstractNcsNodeInfo& nodeInfo);

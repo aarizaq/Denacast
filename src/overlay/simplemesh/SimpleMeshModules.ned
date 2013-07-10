@@ -33,12 +33,16 @@ module SimpleMeshModules like IOverlay
         output udpOut;    // gate to the UDP layer
         input appIn;   // gate from the application
         output appOut;    // gate to the application
+        input tcpIn;    // gate from the TCP layer
+        output tcpOut;    // gate to the TCP layer
 
     submodules:
         simplemesh: SimpleMesh;
     connections allowunconnected:
         udpIn --> simplemesh.udpIn;
         udpOut <-- simplemesh.udpOut;
+        tcpIn --> simplemesh.tcpIn;
+        tcpOut <-- simplemesh.tcpOut;
         appIn --> simplemesh.appIn;
         appOut <-- simplemesh.appOut;
 }

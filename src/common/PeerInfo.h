@@ -38,6 +38,7 @@ class BaseOverlay;
  */
 class PeerInfo
 {
+    friend class PeerStorage;
 public:
     /**
      * constructor
@@ -46,20 +47,6 @@ public:
 
 
     virtual ~PeerInfo() {};
-
-    /**
-     * has the peer bootstrapped yet?
-     *
-     * @return true if the peer has bootstrapped, false otherwise
-     */
-    bool isBootstrapped() { return bootstrapped; };
-
-    /**
-     * sets or deletes the bootstrapped parameter
-     *
-     * @param bootstrap true or () if peer has bootstrapped, false otherwise
-     * */
-    void setBootstrapped(bool bootstrap = true) { bootstrapped = bootstrap; };
 
     /**
      * returns the moduleId of the peer
@@ -110,12 +97,6 @@ public:
 
     cObject** getContext() { return context; };
 
-    /**
-     * set the maliciousness of the peer
-     *
-     * @param malic whether the peer is malicious or not
-     */
-    void setMalicious(bool malic = true) { malicious = malic; };
 
     /**
      * standard output stream for PeerInfo,
@@ -127,10 +108,16 @@ public:
      */
     friend std::ostream& operator<<(std::ostream& os, const PeerInfo info);
 
-protected:
+private:
     virtual void dummy(); /**< dummy-function to make PeerInfo polymorphic */
 
-    bool bootstrapped; /**< true if node has bootstrapped */
+    /**
+     * set the maliciousness of the peer
+     *
+     * @param malic whether the peer is malicious or not
+     */
+    void setMalicious(bool malic = true) { malicious = malic; };
+
     bool malicious; /**< true if the node is malicious */
     bool preKilled; /**< true, if the node is marked for deletion */
     int moduleId;  /**< the moduleId of the peer */

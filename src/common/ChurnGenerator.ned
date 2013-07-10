@@ -33,11 +33,7 @@ simple ChurnGenerator
         double noChurnThreshold @unit(s); // if the lifetimeMean of a specific
                                           // churn generator exceeds this,
                                           // NoChurn is used instead
-        string overlayType; // the overlay used in the simulation
-        string channelTypesTx;   // used (tx) access technologies (from common/channels.ned)
+        string channelTypes;   // used (tx) access technologies (from common/channels.ned)
         string channelTypesRx; // used (rx) access technologies (from common/channels.ned)
-        string tier1Type; // the application on top of the overlay used in the simulation
-        string tier2Type; // the module type on top of tier 1
-        string tier3Type; // the module type on top of tier 2
         @display("i=block/timer");
 }

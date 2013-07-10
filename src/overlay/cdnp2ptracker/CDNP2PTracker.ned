@@ -25,6 +25,7 @@
 
 package oversim.overlay.cdnp2ptracker;
 import oversim.common.BaseOverlay;
+import oversim.common.IOverlay;
 
 simple CDNP2PTracker extends BaseOverlay
 {

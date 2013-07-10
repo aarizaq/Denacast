@@ -34,7 +34,8 @@ module DenaCastAppModules like ITier
         output udpOut;    // gate to the UDP layer
         output to_lowerTier;    // gate to the lower tier
         output to_upperTier;    // gate to the upper tier
-
+        input tcpIn;
+        output tcpOut;
     submodules:
         denacastapp: DenaCastApp;
         localvariables: LocalVariables;

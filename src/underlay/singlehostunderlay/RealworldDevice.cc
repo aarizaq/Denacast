@@ -22,6 +22,7 @@
  */
 
 #include "RealworldDevice.h"
+#include "InterfaceTableAccess.h"
 
 
 void RealworldDevice::initialize(int stage)

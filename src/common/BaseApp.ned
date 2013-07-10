@@ -36,6 +36,8 @@ simple BaseApp extends BaseRpc
         input from_upperTier;    // gate from the upper tier
         input direct_in;    // gate for sendDirect
         input trace_in;    // gate for trace file commands
+        input tcpIn;    // gate from the TCP layer
+        output tcpOut;    // gate to the TCP layer
         output udpOut;    // gate to the UDP layer
         output to_lowerTier;    // gate to the lower tier
         output to_upperTier;    // gate to the upper tier

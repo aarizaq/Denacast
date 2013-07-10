@@ -31,7 +31,7 @@ package oversim.underlay.singlehostunderlay;
 simple TunOutDevice
 {
     parameters:
-        int mtu @unit("B"); // maximum transmission unit of the underlaying network
+        int mtu @unit(B); // maximum transmission unit of the underlaying network
         @display("i=block/ifcard");
 
     gates:

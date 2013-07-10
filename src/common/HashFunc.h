@@ -50,10 +50,10 @@ template<> struct hash<IPvXAddress> : std::unary_function<IPvXAddress, std::size
     std::size_t operator()(const IPvXAddress& addr) const
     {
         if (addr.isIPv6()) {
-            return (bswap_32(addr.get6().words()[0])) ^
+            return ((bswap_32(addr.get6().words()[0])) ^
                    (bswap_32(addr.get6().words()[1])) ^
                    (bswap_32(addr.get6().words()[2])) ^
-                   (bswap_32(addr.get6().words()[3]));
+                   (bswap_32(addr.get6().words()[3])));
         } else {
             return bswap_32(addr.get4().getInt());
         }

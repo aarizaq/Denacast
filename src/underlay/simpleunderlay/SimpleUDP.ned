@@ -21,6 +21,8 @@
 
 package oversim.underlay.simpleunderlay;
 
+import inet.transport.udp.UDP;
+
 //
 // UDP protocol implementation, for IPv4 and IPv6.
 //
@@ -48,7 +50,7 @@ package oversim.underlay.simpleunderlay;
 //
 // @see SimpleUDPPacket, UDPControlInfo, GlobalRoutingHashMap
 //
-simple SimpleUDP
+simple SimpleUDP extends UDP
 {
     parameters:
         @class(SimpleUDP);
@@ -59,13 +61,8 @@ simple SimpleUDP
                                         // according to "Network Coordinates in the Wild", Figure 7
                                         // possible values: empty, "live_all", "live_planetlab", "simulation"
         double jitter;                  // average amount of jitter in %
-        bool dropErrorPackets;
         @display("i=block/transport");
-         
     gates:
-        input appIn[];    // incoming gate from application       
-        output appOut[];     // outgoing gate to application
-        input network_in;
 }
 
 

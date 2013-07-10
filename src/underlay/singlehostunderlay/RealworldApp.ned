@@ -28,7 +28,7 @@ package oversim.underlay.singlehostunderlay;
 simple RealworldApp
 {
     parameters:
-        int mtu @unit("B");    // maximum transmission unit of the underlaying network
+        int mtu @unit(B);    // maximum transmission unit of the underlaying network
         string parser;    // name of the PacketParser to use
 
     gates:

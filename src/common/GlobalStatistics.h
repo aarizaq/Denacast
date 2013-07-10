@@ -32,7 +32,7 @@ class OverlayKey;
 
 /**
  * Macro used for recording statistics considering measureNetwIn
- * parameter. The do-while-loop is needed for compatability in
+ * parameter. The do-while-loop is needed for comparability in
  * outer if-else-structures.
  */
 #define RECORD_STATS(x) \
@@ -43,14 +43,14 @@ class OverlayKey;
 
 
 /**
- * Modul to record global statistics
+ * Module to record global statistics
  *
  * @author Ingmar Baumgart
  */
 class GlobalStatistics : public cSimpleModule
 {
 public:
-    static const double MIN_MEASURED = 0.1; //!< minimum useful measured lifetime in seconds
+    static const double MIN_MEASURED; //!< minimum useful measured lifetime in seconds
 
     double sentKBRTestAppMessages; //!< total number of messages sent by KBRTestApp
     double deliveredKBRTestAppMessages; //!< total number of messages delivered by KBRTestApp
@@ -71,18 +71,24 @@ public:
      */
     void addStdDev(const std::string& name, double value);
 
+    /**
+     * Add a value to the histogram plot, or create a new histogram if one
+     * hasn't yet been created with name.
+     */
+    void recordHistogram(const std::string& name, double value);
 
     /**
-     * record a value to a global cOutVector defined by name
+     * Record a value to a global cOutVector defined by name
      *
      * @param name a string to identify the vector (should be "Module: Scalar Name")
      * @param value the value to add
      */
-    void recordOutVector(const std::string& name, double value /*, int avg = -1*/);
+    void recordOutVector(const std::string& name, double value);
 
     void startMeasuring();
 
     inline bool isMeasuring() { return measuring; };
+    inline bool getMeasureNetwInitPhase() { return measureNetwInitPhase; };
     inline simtime_t getMeasureStartTime() { return measureStartTime; };
 
     simtime_t calcMeasuredLifetime(simtime_t creationTime);
@@ -102,7 +108,8 @@ protected:
             vector(name.c_str()), count(0), value(0), avg(0) {};
     };
 
-    std::map<std::string, cStdDev*> stdDevMap; //!< map to store and access the statistics data
+    std::map<std::string, cStdDev*> stdDevMap; //!< map to store and access scalars
+    std::map<std::string, cHistogram*> histogramMap; //!< map to store and access histograms
     std::map<std::string, OutVector*> outVectorMap; //!< map to store and access the output vectors
     cMessage* globalStatTimer; //!< timer for periodic statistic updates
     double globalStatTimerInterval; //!< interval length of periodic statistic timer
@@ -123,6 +130,7 @@ protected:
     virtual void finish();
 
     bool measuring;
+    bool measureNetwInitPhase;
     simtime_t measureStartTime;
 };
 

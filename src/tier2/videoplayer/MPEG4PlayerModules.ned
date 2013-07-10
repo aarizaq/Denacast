@@ -38,6 +38,9 @@ module MPEG4PlayerModules like ITier
         output udpOut;    // gate to the UDP layer
         output to_lowerTier;    // gate to the lower tier
         output to_upperTier;    // gate to the upper tier
+        input tcpIn;    // gate from the TCP layer
+        output tcpOut;    // gate to the TCP layer
+        
 
     submodules:
         mpeg4player: MPEG4Player;

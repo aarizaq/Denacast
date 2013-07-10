@@ -32,6 +32,8 @@ module DenaCastOverlayModules like IOverlay
     gates:
         input udpIn;  // gate from UDP
         output udpOut;   // gate to UDP
+        input tcpIn;    // gate from the TCP layer
+        output tcpOut;    // gate to the TCP layer
         input appIn;  // gate from application
         output appOut;   // gate to application
 
@@ -40,6 +42,8 @@ module DenaCastOverlayModules like IOverlay
     connections allowunconnected:
         udpIn --> denacastoverlay.udpIn;
         udpOut <-- denacastoverlay.udpOut;
+        tcpIn --> denacastoverlay.tcpIn;
+        tcpOut <-- denacastoverlay.tcpOut;
         appIn --> denacastoverlay.appIn;
         appOut <-- denacastoverlay.appOut;
 }

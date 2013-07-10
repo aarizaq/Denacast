@@ -42,7 +42,7 @@ void DenaCastOverlay::initializeOverlay(int stage)
     ARQ = par("ARQ");
     pMax = par("pMax");
 	sourceBandwidth = par("sourceBandwidth");
-    if(globalNodeList->getPeerInfo(thisNode.getIp())->getTypeID() == 2)
+    if(globalNodeList->getPeerInfo(thisNode.getIp())->getTypeID() == par("denacastSourceNodeType").longValue())
     	isSource = true;
     else
     	isSource = false;
@@ -312,8 +312,8 @@ void DenaCastOverlay::setBandwidth()
 	cModule* nodeModule = getParentModule()->getParentModule();
 	if(!nodeModule->hasGate("pppg$i"))  //if SimpleUderlay
 	{
-		upBandwidth = dynamic_cast<SimpleInfo*>(globalNodeList->getPeerInfo(thisNode))->getEntry()->getUpBandwidth();
-		downBandwidth = dynamic_cast<SimpleInfo*>(globalNodeList->getPeerInfo(thisNode))->getEntry()->getDownBandwidth();
+		upBandwidth = dynamic_cast<SimpleInfo*>(globalNodeList->getPeerInfo(thisNode))->getEntry()->getTxBandwidth();
+		downBandwidth = dynamic_cast<SimpleInfo*>(globalNodeList->getPeerInfo(thisNode))->getEntry()->getRxBandwidth();
 //		std::cout << "upBandwidth:  " << upBandwidth<< "  downBandwidth:  " << downBandwidth << std::endl;
 	}
 	else //if InetUnderlay

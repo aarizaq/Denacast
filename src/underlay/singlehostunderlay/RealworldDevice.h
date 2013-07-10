@@ -25,9 +25,7 @@
 #define _REALWORLDDEVICE_H_
 
 #include "RealworldConnector.h"
-
 #include "IInterfaceTable.h"
-#include "InterfaceTableAccess.h"
 
 /**
  * RealworldDevice is a pseudo interface that allows communcation with the real world

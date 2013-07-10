@@ -29,6 +29,7 @@ simple BaseOverlay extends BaseRpc
         @class(BaseOverlay);
         @display("i=block/circle");
         int localPort; // UDP port for overlay messages
+        int overlayId; // identifies the overlay this node belongs to (used for multiple overlays)
         bool debugOutput; // enable debug output
         int keyLength; // overlay key length in bits
         string nodeId; // optional nodeId as string in hexadecimal notation 
@@ -55,6 +56,7 @@ simple BaseOverlay extends BaseRpc
         bool lookupAcceptLateSiblings; // if true, a FindNodeResponse with sibling flag set is always accepted, even if it is from a previous lookup step
         string routingType; // default routing mode (iterative, semi-recursive,...)
         bool rejoinOnFailure; // rejoin after loosing connection to the overlay?
+        bool sendRpcResponseToLastHop; // needed by KBR protocols for NAT support
         bool recordRoute; // record visited hops on route 
 
         bool dropFindNodeAttack; // if node is malicious, it tries a findNode attack
@@ -67,6 +69,8 @@ simple BaseOverlay extends BaseRpc
     gates:
         input udpIn; // gate from the UDP layer
         output udpOut; // gate to the UDP layer
+        input tcpIn; // gate from the TCP layer
+        output tcpOut; // gate to the TCP layer
         input appIn; // gate from the application
         output appOut; // gate to the application
         input direct_in; // gate for sendDirect

@@ -38,7 +38,7 @@ void SimpleMesh::initializeOverlay(int stage)
 	if (stage != MIN_STAGE_OVERLAY)
 		return;
 	isRegistered = false;
-    if(globalNodeList->getPeerInfo(thisNode.getIp())->getTypeID() == 2)
+    if(globalNodeList->getPeerInfo(thisNode.getIp())->getTypeID() == par("denacastSourceNodeType").longValue())
     	isSource = true;
     else
     	isSource = false;
@@ -82,7 +82,7 @@ void SimpleMesh::initializeOverlay(int stage)
 
 void SimpleMesh::joinOverlay()
 {
-	trackerAddress  = *globalNodeList->getRandomAliveNode(1);
+	trackerAddress  = *globalNodeList->getRandomAliveNode(0);
 	remainNotificationTimer = new cMessage ("remainNotificationTimer");
 	scheduleAt(simTime()+neighborNotificationPeriod,remainNotificationTimer);
 	std::stringstream ttString;

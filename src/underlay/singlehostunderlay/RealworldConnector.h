@@ -35,6 +35,7 @@
  * \param nbytes The length of the buffer in bytes
  * \return the Checksum
  */
+/*
 inline u_short cksum(uint16_t *buf, int nbytes)
 {
     register unsigned long  sum;
@@ -57,7 +58,7 @@ inline u_short cksum(uint16_t *buf, int nbytes)
 
     return ~sum;
 }
-
+*/
 /**
  * RealworldConnector is a pseudo interface that allows communcation with the real world
  * through the TunOutScheduler
@@ -77,7 +78,7 @@ protected:
     long numRcvError;
 
     cMessage* packetNotification; // used by TunOutScheduler to notify about new packets
-    RealtimeScheduler::PacketBuffer packetBuffer; // received packets are stored here
+    PacketBuffer packetBuffer; // received packets are stored here
     RealtimeScheduler* scheduler;
     PacketParser* parser;
 
@@ -100,7 +101,8 @@ protected:
     virtual char* encapsulate(cPacket *msg,
                               unsigned int* length,
                               sockaddr** addr,
-                              socklen_t* addrlen) = 0;
+                              socklen_t* addrlen) {error("RealworldConnector::encapsulate is not overloaded"); return NULL;}
+;
 
     /**
      * Parses data received from the (realworld) network and converts it into a cMessage
@@ -114,7 +116,7 @@ protected:
     virtual cPacket *decapsulate(char* buf,
                                   uint32_t length,
                                   sockaddr* addr,
-                                  socklen_t addrlen) = 0;
+                                  socklen_t addrlen) {error("RealworldConnector::decapsulate is not overloaded"); return NULL;}
 
     /**
      * If the Connector connects to an application, this method has to be overwritten to return "true"
@@ -123,13 +125,11 @@ protected:
     virtual bool isApp() {return false;}
 
 public:
-    RealworldConnector();
-    virtual ~RealworldConnector();
 
-    virtual int numInitStages() const
-    {
-        return 4;
-    }
+    RealworldConnector() {packetNotification = NULL;}
+    virtual ~RealworldConnector() {cancelAndDelete(packetNotification);}
+
+    virtual int numInitStages() const {return 4;}
 
     /** Initialization of the module.
      * Registers the device at the scheduler and searches for the appropriate payload-parser

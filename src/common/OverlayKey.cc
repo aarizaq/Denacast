@@ -745,8 +745,12 @@ void OverlayKey::test()
 
     cout << "KeyRingMetric::distance(1, max)="
          <<  KeyRingMetric().distance(OverlayKey::ONE, OverlayKey::getMax()) << endl;
+    cout << "KeyCwRingMetric::distance(1, max)="
+         <<  KeyCwRingMetric().distance(OverlayKey::ONE, OverlayKey::getMax()) << endl;
     cout << "KeyRingMetric::distance(max, 1)="
          <<  KeyRingMetric().distance(OverlayKey::getMax(), OverlayKey::ONE) << endl;
+    cout << "KeyCwRingMetric::distance(max, 1)="
+         <<  KeyCwRingMetric().distance(OverlayKey::getMax(), OverlayKey::ONE) << endl;
 
     // suffix and log2 test
     cout << endl << "--- RandomSuffix and log2 test ..." << endl;

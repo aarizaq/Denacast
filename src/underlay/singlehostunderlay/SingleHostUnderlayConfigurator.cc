@@ -56,7 +56,6 @@ Define_Module(SingleHostUnderlayConfigurator);
 
 void SingleHostUnderlayConfigurator::initializeUnderlay(int stage)
 {
-    StunAddress4 publicAddr, stunServerAddr;
     IPvXAddress addr;
 
     if(stage != MAX_STAGE_UNDERLAY)
@@ -105,34 +104,6 @@ void SingleHostUnderlayConfigurator::initializeUnderlay(int stage)
         addr = IPv4Address(nodeIP.c_str());
     }
 
-    if (stunServer.size()) {
-        // TODO: use and set overlayPort!
-        throw cRuntimeError("SingleHostConfigurator::initializeUnderlay():"
-                                " Not implemented yet!");
-        int srcPort = 0;
-        publicAddr.addr = 0;
-        publicAddr.port = srcPort;
-        stunServerAddr.addr = 0;
-        char tmpAddr[512];
-        strncpy (tmpAddr, stunServer.c_str(), 512);
-
-        if (stunParseServerName(tmpAddr, stunServerAddr)) {
-            bool presPort = false;
-            bool hairpin = false;
-
-            NatType stype = stunNatType(stunServerAddr, false, &presPort,
-                                        &hairpin, srcPort, &publicAddr);
-            if (stype != StunTypeOpen) {
-                EV << "SingleHostConfigurator::initializeUnderlay(): "
-                   << "Node is behind NAT or invalid STUN server configuration!"
-                   << std::endl;
-            }
-
-            publicAddr.addr = htonl(publicAddr.addr);
-            addr = IPv4Address(inet_ntoa(*((struct in_addr *)(&(publicAddr.addr)))));
-        }
-    }
-
     IPvXAddress gw = addr;
     InterfaceEntry* ifEntry = IPvXAddressResolver().interfaceTableOf(node)->
 	    getInterfaceByName("outDev");
@@ -160,7 +131,7 @@ void SingleHostUnderlayConfigurator::initializeUnderlay(int stage)
                                 bootstrapInfo);
 
         globalNodeList->registerPeer(NodeHandle(OverlayKey::ONE,
-                IPv4Address(par("bootstrapIP").stringValue()), par("bootstrapPort")));
+            IPv4Address(par("bootstrapIP").stringValue()), par("bootstrapPort")));
     }
 
     // update display

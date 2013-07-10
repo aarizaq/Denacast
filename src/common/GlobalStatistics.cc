@@ -29,12 +29,14 @@ Define_Module(GlobalStatistics);
 
 using namespace std;
 
+const double GlobalStatistics::MIN_MEASURED = 0.1;
+
 void GlobalStatistics::initialize()
 {
     sentKBRTestAppMessages = 0;
     deliveredKBRTestAppMessages = 0;
 
-    measuring = par("measureNetwInitPhase");
+    measuring = measureNetwInitPhase = par("measureNetwInitPhase");
     measureStartTime = 0;
 
     currentDeliveryVector.setName("Current Delivery Ratio");
@@ -109,7 +111,7 @@ void GlobalStatistics::finalizeStatistics()
 
     // record stats from other modules
     for (map<std::string, cStdDev*>::iterator iter = stdDevMap.begin();
-    iter != stdDevMap.end(); iter++) {
+            iter != stdDevMap.end(); iter++) {
 
         const std::string& n = iter->first;
         const cStatistic& stat = *(iter->second);
@@ -125,6 +127,12 @@ void GlobalStatistics::finalizeStatistics()
         }
     }
 
+    for (map<std::string, cHistogram*>::iterator iter = histogramMap.begin();
+            iter != histogramMap.end(); iter++) {
+        const std::string& n = iter->first;
+        recordStatistic(n.c_str(), iter->second);
+    }
+
     for (map<std::string, OutVector*>::iterator iter = outVectorMap.begin();
     iter != outVectorMap.end(); iter++) {
         const OutVector& ov = *(iter->second);
@@ -135,9 +143,9 @@ void GlobalStatistics::finalizeStatistics()
 
 void GlobalStatistics::addStdDev(const std::string& name, double value)
 {
-//    if (!measuring) {
-//        return;
-//    }
+    if (!measuring) {
+        return;
+    }
 
     std::map<std::string, cStdDev*>::iterator sdPos = stdDevMap.find(name);
     cStdDev* sd = NULL;
@@ -153,8 +161,27 @@ void GlobalStatistics::addStdDev(const std::string& name, double value)
     sd->collect(value);
 }
 
-void GlobalStatistics::recordOutVector(const std::string& name, double value
-                                       /*, int avg*/)
+void GlobalStatistics::recordHistogram(const std::string& name, double value)
+{
+    if (!measuring) {
+        return;
+    }
+
+    std::map<std::string, cHistogram*>::iterator hPos = histogramMap.find(name);
+    cHistogram* h = NULL;
+
+    if (hPos == histogramMap.end()) {
+        Enter_Method_Silent();
+        h = new cHistogram(name.c_str());
+        histogramMap.insert(pair<std::string, cHistogram*>(name, h));
+    } else {
+        h = hPos->second;
+    }
+
+    h->collect(value);
+}
+
+void GlobalStatistics::recordOutVector(const std::string& name, double value)
 {
     if (!measuring) {
         return;
@@ -175,33 +202,6 @@ void GlobalStatistics::recordOutVector(const std::string& name, double value
     ov->vector.record(value);
     ov->value += value;
     ov->count++;
-
-#if 0
-    // avg vector
-    if (avg != -1) {
-        std::string name_avg = name + "_avg";
-        std::map<std::string, OutVector*>::iterator ovPos_avg =
-            outVectorMap.find(name_avg);
-        OutVector* ov_avg = NULL;
-
-        if (ovPos_avg == outVectorMap.end()) {
-            Enter_Method_Silent();
-            ov_avg = new OutVector(name_avg);
-            outVectorMap.insert(pair<std::string, OutVector*>(name_avg, ov_avg));
-        } else {
-            ov_avg = ovPos_avg->second;
-        }
-        int div = ((ov_avg->count >= avg) ? (avg - 1) : ov_avg->count);
-        if (div <= 0) div = 1;
-
-        double newValue = (ov_avg->avg * div + value) / (div + 1);
-        ov_avg->vector.record(newValue);
-        ov_avg->avg = newValue;
-        ov_avg->value += newValue;
-        ov_avg->count++;
-    }
-#endif
-
 }
 
 simtime_t GlobalStatistics::calcMeasuredLifetime(simtime_t creationTime)
@@ -213,16 +213,22 @@ simtime_t GlobalStatistics::calcMeasuredLifetime(simtime_t creationTime)
 GlobalStatistics::~GlobalStatistics()
 {
     // deallocate vectors
-    for (map<std::string, cStdDev*>::iterator iter = stdDevMap.begin();
-    iter != stdDevMap.end(); iter++) {
-        delete iter->second;
+    for (map<std::string, cStdDev*>::iterator it = stdDevMap.begin();
+            it != stdDevMap.end(); it++) {
+        delete it->second;
     }
     stdDevMap.clear();
 
-    for (map<std::string, OutVector*>::iterator iter = outVectorMap.begin();
-    iter != outVectorMap.end(); iter++) {
-        delete iter->second;
+    for (map<std::string, OutVector*>::iterator it = outVectorMap.begin();
+            it != outVectorMap.end(); it++) {
+        delete it->second;
     }
     outVectorMap.clear();
+
+    for (map<std::string, cHistogram*>::iterator iter = histogramMap.begin();
+            iter != histogramMap.end(); iter++) {
+        delete iter->second;
+    }
+    histogramMap.clear();
 }
 

@@ -82,6 +82,9 @@ protected:
      */
     void initializeUnderlay(int stage);
 
+    void setUpIPv4(cTopology &topo);
+    void setUpIPv6(cTopology &topo);
+
     /**
      * process timer messages
      *

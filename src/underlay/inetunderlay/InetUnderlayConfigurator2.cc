@@ -248,11 +248,11 @@ TransportAddress* InetUnderlayConfigurator2::createNode(NodeType type, bool init
                     "with the InetUnderlay. Use **.accessNet.channelTypes instead!");
     }
 
-    node->par("overlayType").setStringValue(type.overlayType.c_str());
+   /* node->par("overlayType").setStringValue(type.overlayType.c_str());
     node->par("tier1Type").setStringValue(type.tier1Type.c_str());
     node->par("tier2Type").setStringValue(type.tier2Type.c_str());
     node->par("tier3Type").setStringValue(type.tier3Type.c_str());
-
+*/
     node->setGateSize("pppg", 1);
 
     std::string displayString;
@@ -286,11 +286,10 @@ TransportAddress* InetUnderlayConfigurator2::createNode(NodeType type, bool init
 		servers.pop_back();
 	}
     info->setAccessNetModule(accessNet);
-    // add node to a randomly chosen access net
-    info->setNodeID(accessNet->addOverlayNode(node));
+    info->setNodeID(node->getId());
 
-    // add node to bootstrap oracle
-    globalNodeList->addPeer(IPvXAddressResolver().addressOf(node), info);
+    // add node to a randomly chosen access net and bootstrap oracle
+    globalNodeList->addPeer(accessNet->addOverlayNode(node), info);
 
     // if the node was not created during startup we have to
     // finish the initialization process manually
@@ -430,10 +429,9 @@ void InetUnderlayConfigurator2::migrateNode(NodeType type, TransportAddress* add
     InetInfo* newinfo = new InetInfo(type.typeID, node->getId(), type.context);
     // add node to a randomly chosen access net
     newinfo->setAccessNetModule(newAccessNetModule);
-    newinfo->setNodeID(newAccessNetModule->addOverlayNode(node, true));
-
-    //add node to bootstrap oracle
-    globalNodeList->addPeer(IPvXAddressResolver().addressOf(node), newinfo);
+    newinfo->setNodeID(node->getId());
+    //add node to a randomly chosen access net bootstrap oracle
+    globalNodeList->addPeer(newAccessNetModule->addOverlayNode(node, true), newinfo);
 
     // inform the notification board about the migration
     NotificationBoard* nb = check_and_cast<NotificationBoard*>(node->getSubmodule("notificationBoard"));

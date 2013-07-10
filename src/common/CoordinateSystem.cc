@@ -27,20 +27,22 @@
 
 uint8_t EuclideanNcsNodeInfo::dim;
 
-Prox GnpNpsCoordsInfo::getDistance(const AbstractNcsNodeInfo& abstractInfo) const
+Prox EuclideanNcsNodeInfo::getDistance(const AbstractNcsNodeInfo& abstractInfo) const
 {
-    if (!dynamic_cast<const GnpNpsCoordsInfo*>(&abstractInfo)) {
+    if (!dynamic_cast<const EuclideanNcsNodeInfo*>(&abstractInfo)) {
         return Prox::PROX_UNKNOWN;
     }
-    const GnpNpsCoordsInfo& info =
-        *(static_cast<const GnpNpsCoordsInfo*>(&abstractInfo));
+    const EuclideanNcsNodeInfo& info =
+        *(static_cast<const EuclideanNcsNodeInfo*>(&abstractInfo));
 
     double dist = 0.0;
 
     for (uint8_t i = 0; i < info.getDimension(); ++i) {
         dist += pow(getCoords(i) - info.getCoords(i), 2);
     }
-    dist = sqrt(dist);
+    dist = sqrt(dist) / 1000;
+    // old calculation based on s not ms
+    //     dist = sqrt(dist);
 
     return Prox(dist, 0.7); //TODO
 }
@@ -58,8 +60,9 @@ bool GnpNpsCoordsInfo::update(const AbstractNcsNodeInfo& abstractInfo)
     return true;
 }
 
-GnpNpsCoordsInfo::operator std::vector<double>() const {
-    std::vector<double> temp;
+GnpNpsCoordsInfo::operator Coords() const
+{
+    Coords temp;
     for (uint8_t i = 0; i < coordinates.size(); ++i) {
         temp.push_back(coordinates[i]);
     }
@@ -72,12 +75,15 @@ std::ostream& operator<<(std::ostream& os, const GnpNpsCoordsInfo& info)
 {
     if (!info.getCoords().size()) throw cRuntimeError("dim = 0");
 
+    /*
     os << "< ";
     uint8_t i;
     for (i = 0; i < info.getCoords().size() - 1; ++i) {
         os << info.getCoords(i) << ", ";
     }
     os << info.getCoords(i) << " >";
+    */
+    os << info.getCoords();
     if (info.getLayer() != -1)
         os << ", NPS-Layer = " << (int)info.getLayer();
 
@@ -97,7 +103,7 @@ Prox VivaldiCoordsInfo::getDistance(const AbstractNcsNodeInfo& abstractInfo) con
     for (uint8_t i = 0; i < info.getDimension(); ++i) {
         dist += pow(getCoords(i) - info.getCoords(i), 2);
     }
-    dist = sqrt(dist);
+    dist = sqrt(dist) / 1000;
 
     accuracy = 1 - ((info.getError() + getError()) / 2);
     if (info.getError() >= 1.0 || getError() >= 1.0) accuracy = 0.0;
@@ -126,8 +132,9 @@ bool VivaldiCoordsInfo::update(const AbstractNcsNodeInfo& info)
     return false;
 }
 
-VivaldiCoordsInfo::operator std::vector<double>() const {
-    std::vector<double> temp;
+VivaldiCoordsInfo::operator Coords() const
+{
+    Coords temp;
     for (uint8_t i = 0; i < coordinates.size(); ++i) {
         temp.push_back(coordinates[i]);
     }
@@ -151,5 +158,90 @@ std::ostream& operator<<(std::ostream& os, const VivaldiCoordsInfo& info)
     if (info.getHeightVector() != -1.0)
         os << ", HeightVec = " << info.getHeightVector();
 
+    return os;
+}
+
+SimpleUnderlayCoordsInfo::operator Coords() const
+{
+    return coordinates;
+}
+
+
+bool SimpleUnderlayCoordsInfo::update(const AbstractNcsNodeInfo& abstractInfo)
+{
+    if (!dynamic_cast<const SimpleUnderlayCoordsInfo*>(&abstractInfo)) return false;
+
+    const SimpleUnderlayCoordsInfo& temp = static_cast<const SimpleUnderlayCoordsInfo&>(abstractInfo);
+
+    coordinates = temp.coordinates;
+
+    return true;
+}
+
+Prox SimpleUnderlayCoordsInfo::getDistance(const AbstractNcsNodeInfo& abstractInfo) const
+{
+    if (!dynamic_cast<const SimpleUnderlayCoordsInfo*>(&abstractInfo)) {
+        return Prox::PROX_UNKNOWN;
+    }
+    const SimpleUnderlayCoordsInfo& info =
+        *(static_cast<const SimpleUnderlayCoordsInfo*>(&abstractInfo));
+
+    double dist = 0.0;
+
+    for (uint8_t i = 0; i < info.getDimension(); ++i) {
+        dist += pow(getCoords(i) - info.getCoords(i), 2);
+    }
+    dist = sqrt(dist);
+    dist *= 2;
+
+    return Prox(dist, 0.7); //TODO
+}
+
+
+Prox SimpleCoordsInfo::getDistance(const AbstractNcsNodeInfo& abstractInfo) const
+{
+    const SimpleCoordsInfo& temp =
+        dynamic_cast<const SimpleCoordsInfo&>(abstractInfo);
+
+    return Prox(2 * (accessDelay +
+                temp.getAccessDelay() +
+                EuclideanNcsNodeInfo::getDistance(abstractInfo)), 0.7);
+}
+
+
+bool SimpleCoordsInfo::update(const AbstractNcsNodeInfo& abstractInfo)
+{
+    if (!dynamic_cast<const SimpleCoordsInfo*>(&abstractInfo)) return false;
+
+    const SimpleCoordsInfo& temp =
+        static_cast<const SimpleCoordsInfo&>(abstractInfo);
+
+    coordinates = temp.coordinates;
+
+    return true;
+}
+
+
+SimpleCoordsInfo::operator Coords() const
+{
+    Coords temp;
+    for (uint8_t i = 0; i < coordinates.size(); ++i) {
+        temp.push_back(coordinates[i]);
+    }
+    temp.push_back(SIMTIME_DBL(accessDelay));
+
+    return temp;
+}
+
+std::ostream& operator<<(std::ostream& os, const Coords& coords)
+{
+    uint8_t dim = coords.size();
+    if (dim == 0) return os;
+
+    os << "< " << coords[0];
+    for (uint8_t i = 1; i < dim; i++) {
+        os << ", " << coords[i];
+    }
+    os << " >";
     return os;
 }

@@ -33,6 +33,12 @@ class NeighborCache;
 class BaseCallMessage;
 
 
+
+typedef std::vector<double> Coords;
+typedef std::vector<Coords> CoordsVec;
+std::ostream& operator<<(std::ostream& os, const Coords& coords);
+
+
 class AbstractNcsNodeInfo
 {
 public:
@@ -41,7 +47,9 @@ public:
     virtual Prox getDistance(const AbstractNcsNodeInfo& node) const = 0;
     virtual bool update(const AbstractNcsNodeInfo& info) = 0;
 
-    virtual operator std::vector<double>() const = 0;
+    virtual const Coords& getCoords() const = 0;
+
+    virtual operator Coords() const = 0;
 };
 
 class EuclideanNcsNodeInfo : public AbstractNcsNodeInfo
@@ -60,7 +68,7 @@ public:
         return coordinates[i];
     };
 
-    const std::vector<double>& getCoords() const { return coordinates; };
+    const Coords& getCoords() const { return coordinates; };
 
     void setCoords(uint8_t i, double value) {
         if (i >= coordinates.size()) {
@@ -69,8 +77,10 @@ public:
         coordinates[i] = value;
     };
 
+    Prox getDistance(const AbstractNcsNodeInfo& abstractInfo) const;
+
 protected:
-    std::vector<double> coordinates;
+    Coords coordinates;
     static uint8_t dim;
 };
 
@@ -83,10 +93,10 @@ public:
 
     int8_t getLayer() const { return npsLayer; };
     void setLayer(int8_t layer) { npsLayer = layer; };
-    Prox getDistance(const AbstractNcsNodeInfo& abstractInfo) const;
+
     bool update(const AbstractNcsNodeInfo& abstractInfo);
 
-    operator std::vector<double>() const;
+    operator Coords() const;
 
 protected:
     int8_t npsLayer;
@@ -94,10 +104,45 @@ protected:
 
 std::ostream& operator<<(std::ostream& os, const GnpNpsCoordsInfo& info);
 
+
+class SimpleUnderlayCoordsInfo : public EuclideanNcsNodeInfo
+{
+public:
+	//SimpleUnderlayCoordsInfo() { };
+
+    operator Coords() const;
+
+    bool isValid() { return true; };
+
+    Prox getDistance(const AbstractNcsNodeInfo& abstractInfo) const;
+    bool update(const AbstractNcsNodeInfo& abstractInfo);
+};
+
+
+class SimpleCoordsInfo : public EuclideanNcsNodeInfo
+{
+  public:
+    bool isValid() { return true; };
+
+    Prox getDistance(const AbstractNcsNodeInfo& abstractInfo) const;
+    bool update(const AbstractNcsNodeInfo& abstractInfo);
+
+    simtime_t getAccessDelay() const { return accessDelay; };
+    void setAccessDelay(simtime_t delay) { accessDelay = delay; };
+
+    operator Coords() const;
+
+protected:
+    simtime_t accessDelay;
+};
+
+std::ostream& operator<<(std::ostream& os, const SimpleCoordsInfo& info);
+
+
 class VivaldiCoordsInfo : public EuclideanNcsNodeInfo
 {
 public:
-    VivaldiCoordsInfo(bool useHeightVector = false) {
+	VivaldiCoordsInfo(bool useHeightVector = false) {
         coordErr = 1.0;
         heightVector = (useHeightVector ? 0 : -1.0);
     };
@@ -106,7 +151,14 @@ public:
 
     double getError() const { return coordErr; };
     void setError(double err) {
-        coordErr = ((err > 1.0) ? 1.0 : ((err < 0.0) ? 0.0 : coordErr = err));
+        if (err > 1.0) {
+            coordErr = 1.0;
+        } else if (err < 0.0) {
+            coordErr = 0.0;
+        } else {
+            coordErr = err;
+        }
+        //coordErr = ((err > 1.0) ? 1.0 : ((err < 0.0) ? 0.0 : coordErr = err));
     };
 
     double getHeightVector() const { return heightVector; };
@@ -116,7 +168,7 @@ public:
 
     Prox getDistance(const AbstractNcsNodeInfo& node) const;
     bool update(const AbstractNcsNodeInfo& info);
-    operator std::vector<double>() const ;
+    operator Coords() const ;
 
 protected:
     double coordErr;
@@ -126,12 +178,11 @@ protected:
 std::ostream& operator<<(std::ostream& os, const VivaldiCoordsInfo& info);
 
 class AbstractNcs {
-public:
+  public:
     virtual ~AbstractNcs() { };
 
     virtual void init(NeighborCache* neighorCache) = 0;
-
-    virtual bool isAdapting() = 0;
+    virtual bool isReady() {return true; };
 
     virtual AbstractNcsNodeInfo* getUnvalidNcsInfo() const = 0;
 
@@ -140,7 +191,7 @@ public:
                                     const AbstractNcsNodeInfo& nodeInfo) { };
 
     virtual const AbstractNcsNodeInfo& getOwnNcsInfo() const = 0;
-    virtual AbstractNcsNodeInfo* createNcsInfo(const std::vector<double>& coords) const = 0;
+    virtual AbstractNcsNodeInfo* createNcsInfo(const Coords& coords) const = 0;
 
     virtual void handleTimerEvent(cMessage* msg) { };
     virtual bool handleRpcCall(BaseCallMessage* msg) { return false; };

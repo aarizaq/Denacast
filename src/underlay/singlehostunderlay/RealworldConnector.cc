@@ -24,16 +24,6 @@
 #include <string.h>
 #include "RealworldConnector.h"
 
-RealworldConnector::RealworldConnector()
-{
-    packetNotification = NULL;
-}
-
-RealworldConnector::~RealworldConnector()
-{
-    cancelAndDelete(packetNotification);
-}
-
 void RealworldConnector::initialize(int stage)
 {
     if (stage==3) {
@@ -87,7 +77,7 @@ void RealworldConnector::handleMessage(cMessage *msg)
         while( packetBuffer.size() > 0 ) {
             // get packet from buffer and parse it
 
-            RealtimeScheduler::PacketBufferEntry packet = *(packetBuffer.begin());
+            PacketBufferEntry packet = *(packetBuffer.begin());
             packetBuffer.pop_front();
             char* buf = packet.data;
             uint32_t len = packet.length;

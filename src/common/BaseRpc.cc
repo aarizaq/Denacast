@@ -375,7 +375,8 @@ void BaseRpc::internalHandleRpcMessage(BaseRpcMessage* msg)
         }
         EV << "[BaseRpc::internalHandleRpcMessage() @ " << thisNode.getIp()
            << " " << thisNode.getKey().toString(16) << ")]\n"
-           << "    RPC timeout (" << state.callMsg->getName() << ")"
+           << "    RPC to " << state.dest->getIp()
+           << " timeout (" << state.callMsg->getName() << ")"
            << endl;
 
         // inform neighborcache
@@ -436,13 +437,14 @@ void BaseRpc::internalHandleRpcMessage(BaseRpcMessage* msg)
         //    globalStatistics->recordOutVector("BaseRpc: UDP Round Trip Time",
         //                                      rtt);
 
-        // neighborCache/vivaldi stuff
+        // neighborCache/ncs stuff
         if (state.transportType == UDP_TRANSPORT ||
             (state.transportType != INTERNAL_TRANSPORT &&
-             response->getCallHopCount() == 1)) { //TODO
-            if (neighborCache->adaptingNcs()) {
-                std::vector<double> tempCoords(response->getNcsInfoArraySize());
-                for (uint8_t i = 0; i < response->getNcsInfoArraySize(); i++) {
+             response->getCallHopCount() == 1)) {
+            unsigned int ncsArraySize = response->getNcsInfoArraySize();
+            if (ncsArraySize > 0) {
+                std::vector<double> tempCoords(ncsArraySize);
+                for (uint8_t i = 0; i < ncsArraySize; i++) {
                     tempCoords[i] = response->getNcsInfo(i);
                 }
                 AbstractNcsNodeInfo* coords =
@@ -539,7 +541,7 @@ void BaseRpc::sendRpcResponse(TransportType transportType,
     }
 
     // vivaldi: set coordinates and error estimation in response
-    if (neighborCache->adaptingNcs()) { //TODO only for directly sent msgs
+    if (neighborCache->piggybackOwnCoords()) { //TODO only for directly sent msgs
         std::vector<double> nodeCoord =
             neighborCache->getNcsAccess().getOwnNcsInfo();
 
