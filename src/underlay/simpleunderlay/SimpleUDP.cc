@@ -120,8 +120,7 @@ SimpleUDP::~SimpleUDP()
 
 void SimpleUDP::initialize(int stage)
 {
-    if (stage == 0)
-        UDP::initialize();
+    UDP::initialize(stage);
     if(stage == MIN_STAGE_UNDERLAY) {
         WATCH_PTRMAP(socketsByIdMap);
         WATCH_MAP(socketsByPortMap);
