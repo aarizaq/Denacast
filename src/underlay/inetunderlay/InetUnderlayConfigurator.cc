@@ -34,6 +34,7 @@
 #include <IPv4InterfaceData.h>
 #include <IPv6InterfaceData.h>
 #include <NotificationBoard.h>
+#include <ModuleAccess.h>
 
 
 #include <InetInfo.h>
@@ -102,7 +103,9 @@ TransportAddress* InetUnderlayConfigurator::createNode(NodeType type, bool initi
                     "with the InetUnderlay. Use **.accessNet.channelTypes instead!");
     }
 
-    node->setGateSize("pppg", 1);
+    cModule * mobMod = findModuleWherever("mobility",node);
+    if (mobMod == NULL)
+        node->setGateSize("pppg", 1);
 
     std::string displayString;
 
@@ -145,8 +148,7 @@ TransportAddress* InetUnderlayConfigurator::createNode(NodeType type, bool initi
 
     churnGenerator[type.typeID]->terminalCount++;
 
-    TransportAddress *address = new TransportAddress(
-                                       IPvXAddressResolver().addressOf(node));
+    TransportAddress *address = new TransportAddress(IPvXAddressResolver().addressOf(node));
 
     // update display
     setDisplayString();
@@ -382,6 +384,11 @@ void InetUnderlayConfigurator::setUpIPv4(cTopology &topo)
         cTopology::Node* destNode = topo.getNode(i);
         uint32 destAddr = nodeAddresses[i];
 
+        cModule * mobMod = findModuleWherever("mobility",destNode->getModule());
+        if (mobMod != NULL)
+            continue;
+
+
         // calculate shortest paths from everywhere towards destNode
         topo.calculateUnweightedSingleShortestPathsTo(destNode);
 
@@ -555,6 +562,10 @@ void InetUnderlayConfigurator::setUpIPv6(cTopology &topo)
     for (int i = 0; i < topo.getNumNodes(); i++) {
         cTopology::Node* destNode = topo.getNode(i);
         IPv6Words destAddr = nodeAddresses[i];
+
+        cModule * mobMod = findModuleWherever("mobility",destNode->getModule());
+        if (mobMod != NULL)
+            continue;
 
         // calculate shortest paths from everywhere towards destNode
         topo.calculateUnweightedSingleShortestPathsTo(destNode);

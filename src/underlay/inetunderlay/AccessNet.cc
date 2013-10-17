@@ -106,11 +106,11 @@ IPvXAddress AccessNet::addOverlayNode(cModule* node, bool migrate)
     // find unassigned ip address:
     // check list of returned IPs
     // TODO: check overlays for side effects of reused IP addresses
-//    if (returnedIPs.size() != 0) {
-//      terminal.IPAddress = returnedIPs.back();
-//      returnedIPs.pop_back();
-//    }
-//    else {
+    //    if (returnedIPs.size() != 0) {
+    //      terminal.IPAddress = returnedIPs.back();
+    //      returnedIPs.pop_back();
+    //    }
+    //    else {
     if (useIPv6) {
         IPv6Words candidate(router.IPAddress);
         // we dont need to check for duplicates because of the giant address space and reuse of old IPs
@@ -156,7 +156,7 @@ IPvXAddress AccessNet::addOverlayNode(cModule* node, bool migrate)
         if (!ip_test)
             opp_error ("Error creating node: No available IP in access net!");
     }
-//    }
+    //    }
 
     // update ip display string
     if (ev.isGUI()) {
@@ -167,179 +167,279 @@ IPvXAddress AccessNet::addOverlayNode(cModule* node, bool migrate)
         terminal.module->getDisplayString().setTagArg("t", 1, "l");
     }
 
+    cModule * mobMod = findModuleWherever("mobility",node);
+    if (mobMod == NULL)
+    {
+        //
+        // Create new remote ppp interface module for this terminal
+        //
+        // create ppp interface module
 
-    //
-    // Create new remote ppp interface module for this terminal
-    //
+        int k = 1;
+        while ( router.module->findSubmodule("ppp", k) != -1 )
+            k++;
 
-    // create ppp interface module
-
-    int k = 1;
-    while ( router.module->findSubmodule("ppp", k) != -1 )
-        k++;
-
-    cModuleType* pppInterfaceModuleType = cModuleType::get("inet.linklayer.ppp.PPPInterface");
-    terminal.remotePPPInterface = pppInterfaceModuleType->
-    create("ppp", router.module, 0, k);
+        cModuleType* pppInterfaceModuleType = cModuleType::get("inet.linklayer.ppp.PPPInterface");
+        terminal.remotePPPInterface = pppInterfaceModuleType->
+                create("ppp", router.module, 0, k);
 
 
-    //
-    // Connect all gates
-    //
+        //
+        // Connect all gates
+        //
 
-    // connect terminal to access router and vice versa
-    cGate* routerInGate = firstUnusedGate(router.module, "pppg", cGate::INPUT);
-    cGate* routerOutGate = firstUnusedGate(router.module, "pppg", cGate::OUTPUT);
+        // connect terminal to access router and vice versa
+        cGate* routerInGate = firstUnusedGate(router.module, "pppg", cGate::INPUT);
+        cGate* routerOutGate = firstUnusedGate(router.module, "pppg", cGate::OUTPUT);
 
-    cChannelType* channelTypeRx = cChannelType::find( channelTypeRxStr.c_str() );
-    cChannelType* channelTypeTx = cChannelType::find( channelTypeTxStr.c_str() );
-    if (!channelTypeRx || !channelTypeTx) 
-        opp_error("Could not find Channel or ChannelRx Type. Most likely "
-            "parameter channelTypes does not match the channels defined "
-            "in channels.ned");
+        cChannelType* channelTypeRx = cChannelType::find( channelTypeRxStr.c_str() );
+        cChannelType* channelTypeTx = cChannelType::find( channelTypeTxStr.c_str() );
+        if (!channelTypeRx || !channelTypeTx)
+            opp_error("Could not find Channel or ChannelRx Type. Most likely "
+                    "parameter channelTypes does not match the channels defined "
+                    "in channels.ned");
 
-    terminal.module->gate("pppg$o", 0)->connectTo(routerInGate,
+        terminal.module->gate("pppg$o", 0)->connectTo(routerInGate,
                 channelTypeRx->create(channelTypeRxStr.c_str()));
-    routerOutGate->connectTo(terminal.module->gate("pppg$i", 0),
-                 channelTypeTx->create(channelTypeTxStr.c_str()));
+        routerOutGate->connectTo(terminal.module->gate("pppg$i", 0),
+                channelTypeTx->create(channelTypeTxStr.c_str()));
 
-    // connect ppp interface module to router module and vice versa
-    routerInGate->connectTo(terminal.remotePPPInterface->gate("phys$i"));
-    terminal.remotePPPInterface->gate("phys$o")->connectTo(routerOutGate);
+        // connect ppp interface module to router module and vice versa
+        routerInGate->connectTo(terminal.remotePPPInterface->gate("phys$i"));
+        terminal.remotePPPInterface->gate("phys$o")->connectTo(routerOutGate);
 
-    // connect ppp interface module to network layer module and vice versa
-    cModule* netwModule = router.module->getSubmodule("networkLayer");
+        // connect ppp interface module to network layer module and vice versa
+        cModule* netwModule = router.module->getSubmodule("networkLayer");
 
-    cGate* netwInGate = firstUnusedGate(netwModule, "ifIn");
-    cGate* netwOutGate = firstUnusedGate(netwModule, "ifOut");
+        cGate* netwInGate = firstUnusedGate(netwModule, "ifIn");
+        cGate* netwOutGate = firstUnusedGate(netwModule, "ifOut");
 
-    netwOutGate->connectTo(terminal.remotePPPInterface->gate("upperLayerIn"));
-    terminal.remotePPPInterface->gate("upperLayerOut")->connectTo(netwInGate);
+        netwOutGate->connectTo(terminal.remotePPPInterface->gate("upperLayerIn"));
+        terminal.remotePPPInterface->gate("upperLayerOut")->connectTo(netwInGate);
 
 
 
-    // connect network layer module to ip and arp modules
-    cModule* ipModule;
-    if (useIPv6) {
-        ipModule = router.module->getSubmodule("networkLayer")->getSubmodule("ipv6");
-    }
-    else {
-        ipModule = router.module->getSubmodule("networkLayer")->getSubmodule("ip");
-    }
 
-    cGate* ipIn = firstUnusedGate(ipModule, "queueIn");
-    netwInGate->connectTo(ipIn);
+        // connect network layer module to ip and arp modules
+        cModule* ipModule;
+        if (useIPv6) {
+            ipModule = router.module->getSubmodule("networkLayer")->getSubmodule("ipv6");
+        }
+        else {
+            ipModule = router.module->getSubmodule("networkLayer")->getSubmodule("ip");
+        }
 
-    if(useIPv6) {
-        cGate* ipOut = firstUnusedGate(ipModule, "queueOut");
-        ipOut->connectTo(netwOutGate);
-    }
+        cGate* ipIn = firstUnusedGate(ipModule, "queueIn");
+        netwInGate->connectTo(ipIn);
+
+        if(useIPv6) {
+            cGate* ipOut = firstUnusedGate(ipModule, "queueOut");
+            ipOut->connectTo(netwOutGate);
+        }
 
 #ifdef _ORIG_INET
-    cModule* arpModule = router.module->getSubmodule("networkLayer")->getSubmodule("arp"); //comment out for speed-hack
+        cModule* arpModule = router.module->getSubmodule("networkLayer")->getSubmodule("arp"); //comment out for speed-hack
 
-    cGate* arpOut = firstUnusedGate(arpModule, "nicOut"); //comment out for speed-hack
+        cGate* arpOut = firstUnusedGate(arpModule, "nicOut"); //comment out for speed-hack
 
-    //cGate* ipOut = firstUnusedGate(ipModule, "queueOut"); //comment out for speed-hack
-    cGate* ipOut = ipModule->gate("queueOut");
+        //cGate* ipOut = firstUnusedGate(ipModule, "queueOut"); //comment out for speed-hack
+        cGate* ipOut = ipModule->gate("queueOut");
 
-    arpOut->connectTo(netwOutGate);    //comment out for speed-hack
+        arpOut->connectTo(netwOutGate);    //comment out for speed-hack
 #endif
 
-    //
-    // Start ppp interface modules
-    //
-    terminal.remotePPPInterface->finalizeParameters();
-    terminal.remotePPPInterface->setDisplayString("i=block/ifcard");
-    terminal.remotePPPInterface->buildInside();
-    terminal.remotePPPInterface->scheduleStart(simTime());
-    terminal.remotePPPInterface->callInitialize();
+        //
+        // Start ppp interface modules
+        //
+        terminal.remotePPPInterface->finalizeParameters();
+        terminal.remotePPPInterface->setDisplayString("i=block/ifcard");
+        terminal.remotePPPInterface->buildInside();
+        terminal.remotePPPInterface->scheduleStart(simTime());
+        terminal.remotePPPInterface->callInitialize();
 
-    if ( !migrate) {
-        // we are already in stage 4 and need to call initialize
-    // for all previous stages manually
-        for (int i=0; i < MAX_STAGE_UNDERLAY + 1; i++) {
-            terminal.module->callInitialize(i);
+        if ( !migrate) {
+            // we are already in stage 4 and need to call initialize
+            // for all previous stages manually
+            for (int i=0; i < MAX_STAGE_UNDERLAY + 1; i++) {
+                terminal.module->callInitialize(i);
+            }
+        }
+
+        terminal.remoteInterfaceEntry = router.interfaceTable->getInterface(
+                router.interfaceTable->getNumInterfaces() - 1);
+        terminal.interfaceEntry = terminal.interfaceTable->getInterfaceByName("ppp0");
+
+
+        //
+        // Fill in interface table and routing table.
+        //
+
+        if (useIPv6) {
+            //
+            // Fill in interface table.
+
+            // router
+            IPv6InterfaceData* interfaceData = new IPv6InterfaceData;
+            interfaceData->setAdvSendAdvertisements(true); // router
+            interfaceData->assignAddress(IPv6Address::formLinkLocalAddress(terminal.remoteInterfaceEntry->getInterfaceToken()), false, 0, 0);
+            terminal.remoteInterfaceEntry->setIPv6Data(interfaceData);
+            terminal.remoteInterfaceEntry->setMACAddress(MACAddress::generateAutoAddress());
+
+            // terminal
+            terminal.interfaceEntry->ipv6Data()->setAdvSendAdvertisements(false); // host
+            terminal.interfaceEntry->ipv6Data()->assignAddress(terminal.IPAddress.get6(), false, 0, 0);
+            terminal.interfaceEntry->ipv6Data()->assignAddress(IPv6Address::formLinkLocalAddress(terminal.interfaceEntry->getInterfaceToken()), false, 0, 0);
+            terminal.interfaceEntry->setMACAddress(MACAddress::generateAutoAddress());
+
+            //
+            // Fill in routing table.
+            //
+
+            // router
+            router.routingTable6->addStaticRoute(terminal.IPAddress.get6(),64, terminal.remoteInterfaceEntry->getInterfaceId(), terminal.interfaceEntry->ipv6Data()->getLinkLocalAddress());
+
+            // terminal
+            terminal.routingTable6->addDefaultRoute(terminal.remoteInterfaceEntry->ipv6Data()->getLinkLocalAddress(), terminal.interfaceEntry->getInterfaceId(), 0);
+
+        } else {
+
+            //
+            // Fill in interface table.
+            //
+
+            // router
+            IPv4InterfaceData* interfaceData = new IPv4InterfaceData;
+            interfaceData->setIPAddress(router.IPAddress.get4());
+            interfaceData->setNetmask(IPv4Address::ALLONES_ADDRESS);
+            terminal.remoteInterfaceEntry->setIPv4Data(interfaceData);
+
+            // terminal
+            terminal.interfaceEntry->ipv4Data()->setIPAddress(terminal.IPAddress.get4());
+            terminal.interfaceEntry->ipv4Data()->setNetmask(IPv4Address::ALLONES_ADDRESS);
+
+            //
+            // Fill in routing table.
+            //
+
+            // router
+            IPv4Route* re = new IPv4Route();
+            re->setDestination(terminal.IPAddress.get4());
+            re->setNetmask(IPv4Address(IPv4Address::ALLONES_ADDRESS));
+            re->setInterface(terminal.remoteInterfaceEntry);
+            //re->setType(IPv4Route::DIRECT);
+            re->setSource(IPv4Route::MANUAL);
+            router.routingTable->addRoute(re);
+            terminal.remoteRoutingEntry = re;
+
+            // terminal
+            IPv4Route* te = new IPv4Route();
+            te->setDestination(IPv4Address::UNSPECIFIED_ADDRESS);
+            te->setNetmask(IPv4Address::UNSPECIFIED_ADDRESS);
+            te->setGateway(router.IPAddress.get4());
+            te->setInterface(terminal.interfaceEntry);
+            //te->setType(IPv4Route::REMOTE);
+            te->setSource(IPv4Route::MANUAL);
+            terminal.routingTable->addRoute(te);
+            terminal.routingEntry = te;
+
         }
     }
+    else
+    {
+        if ( !migrate) {
+            // we are already in stage 4 and need to call initialize
+        // for all previous stages manually
+            for (int i=0; i < MAX_STAGE_UNDERLAY + 1; i++) {
+                terminal.module->callInitialize(i);
+            }
+        }
 
-    terminal.remoteInterfaceEntry = router.interfaceTable->getInterface(
-            router.interfaceTable->getNumInterfaces() - 1);
-    terminal.interfaceEntry = terminal.interfaceTable->getInterfaceByName("ppp0");
+        //terminal.remoteInterfaceEntry = router.interfaceTable->getInterface(router.interfaceTable->getNumInterfaces() - 1);
+        //terminal.interfaceEntry = terminal.interfaceTable->getInterfaceByName("ppp0");
 
-
-    //
-    // Fill in interface table and routing table.
-    //
-
-    if (useIPv6) {
-        //
-        // Fill in interface table.
-
-        // router
-        IPv6InterfaceData* interfaceData = new IPv6InterfaceData;
-        interfaceData->setAdvSendAdvertisements(true); // router
-        interfaceData->assignAddress(IPv6Address::formLinkLocalAddress(terminal.remoteInterfaceEntry->getInterfaceToken()), false, 0, 0);
-        terminal.remoteInterfaceEntry->setIPv6Data(interfaceData);
-        terminal.remoteInterfaceEntry->setMACAddress(MACAddress::generateAutoAddress());
-
-        // terminal
-        terminal.interfaceEntry->ipv6Data()->setAdvSendAdvertisements(false); // host
-        terminal.interfaceEntry->ipv6Data()->assignAddress(terminal.IPAddress.get6(), false, 0, 0);
-        terminal.interfaceEntry->ipv6Data()->assignAddress(IPv6Address::formLinkLocalAddress(terminal.interfaceEntry->getInterfaceToken()), false, 0, 0);
-        terminal.interfaceEntry->setMACAddress(MACAddress::generateAutoAddress());
-
-        //
-        // Fill in routing table.
-        //
-
-        // router
-        router.routingTable6->addStaticRoute(terminal.IPAddress.get6(),64, terminal.remoteInterfaceEntry->getInterfaceId(), terminal.interfaceEntry->ipv6Data()->getLinkLocalAddress());
-
-        // terminal
-        terminal.routingTable6->addDefaultRoute(terminal.remoteInterfaceEntry->ipv6Data()->getLinkLocalAddress(), terminal.interfaceEntry->getInterfaceId(), 0);
-
-    } else {
-
-        //
-        // Fill in interface table.
-        //
-
-        // router
-        IPv4InterfaceData* interfaceData = new IPv4InterfaceData;
-        interfaceData->setIPAddress(router.IPAddress.get4());
-        interfaceData->setNetmask(IPv4Address::ALLONES_ADDRESS);
-        terminal.remoteInterfaceEntry->setIPv4Data(interfaceData);
-
-        // terminal
-        terminal.interfaceEntry->ipv4Data()->setIPAddress(terminal.IPAddress.get4());
+        terminal.interfaceEntry = terminal.interfaceTable->getInterfaceByName("wlan");
+        terminal.interfaceEntry->ipv4Data()->setIPAddress(IPv4Address(terminal.IPAddress.get4()));
         terminal.interfaceEntry->ipv4Data()->setNetmask(IPv4Address::ALLONES_ADDRESS);
 
-        //
-        // Fill in routing table.
-        //
+        //#####################################3
+        /*cTopology topo("topo");
+        topo.extractByProperty("node");
 
-        // router
-        IPv4Route* re = new IPv4Route();
-        re->setDestination(terminal.IPAddress.get4());
-        re->setNetmask(IPv4Address(IPv4Address::ALLONES_ADDRESS));
-        re->setInterface(terminal.remoteInterfaceEntry);
-        //re->setType(IPv4Route::DIRECT);
-        re->setSource(IPv4Route::MANUAL);
-        router.routingTable->addRoute(re);
-        terminal.remoteRoutingEntry = re;
+        //NodeInfoVector nodeInfo; // will be of size topo.nodes[]
+        //extractTopology(topo, nodeInfo);
 
-        // terminal
-        IPv4Route* te = new IPv4Route();
-        te->setDestination(IPv4Address::UNSPECIFIED_ADDRESS);
-        te->setNetmask(IPv4Address::UNSPECIFIED_ADDRESS);
-        te->setGateway(router.IPAddress.get4());
-        te->setInterface(terminal.interfaceEntry);
-        //te->setType(IPv4Route::REMOTE);
-        te->setSource(IPv4Route::MANUAL);
-        terminal.routingTable->addRoute(te);
-        terminal.routingEntry = te;
+                    for (int i=0; i<topo.getNumNodes(); i++)
+                    {
+                            if (topo.getNode(i)->getModule()->getId()==terminal.module->getId())
+                            {
+                                ev<<"continue "<<topo.getNode(i)->getModule()->getFullName()<<" :"<< terminal.module->getFullName()<<endl;
+                                continue;
+                            }
+                            cTopology::Node *destinationNode = topo.getNode(i);
+                            IPv4Address destAddr =IPvXAddressResolver().addressOf(topo.getNode(i)->getModule(),IPvXAddressResolver::ADDR_IPv4).get4();
 
+                            IPv4Route *e = new IPv4Route();
+                            e->setDestination(destAddr);
+                            e->setNetmask(IPv4Address(IPv4Address::ALLONES_ADDRESS)); // full match needed
+                            e->setInterface(terminal.interfaceEntry);
+                            //e->setType(IPv4Route::DIRECT);
+                            e->setSource(IPv4Route::MANUAL);
+                            terminal.routingTable->addRoute(e);
+                            terminal.routingEntry = e;
+                            std::cout<< "Route from: "<<terminal.IPAddress<<"  to: "<<destAddr<<" name:"<<destinationNode->getModule()->getFullName()<< "via direct"<<endl;
+
+                            IPv4Route *eb = new IPv4Route();
+                            IRoutingTable* backroute= IPvXAddressResolver().routingTableOf(topo.getNode(i)->getModule());
+                            eb->setDestination(IPv4Address(terminal.IPAddress.get4()));
+                            eb->setNetmask(IPv4Address(IPv4Address::ALLONES_ADDRESS)); // full match needed
+                            eb->setInterface(IPvXAddressResolver().interfaceTableOf(topo.getNode(i)->getModule())->getInterfaceByName("wlan"));
+                            //eb->setType(IPv4Route::DIRECT);
+                            eb->setSource(IPv4Route::MANUAL);
+                            backroute->addRoute(eb);
+                            std::cout<< "Route from: "<<terminal.IPAddress<<"  to: "<<destAddr<<" name:"<<destinationNode->getModule()->getFullName()<< "via direct"<<endl;
+
+                    }
+                    IPv4Route* re = new IPv4Route();
+                    re->setDestination(IPv4Address(terminal.IPAddress.get4()));
+                    re->setNetmask(IPv4Address(IPv4Address::ALLONES_ADDRESS));
+                    re->setInterface(router.interfaceTable->getInterfaceByName("wlan"));
+                    //re->setType(IPv4Route::DIRECT);
+                    re->setSource(IPv4Route::MANUAL);
+                    router.routingTable->addRoute(re);
+                    terminal.remoteRoutingEntry = re;
+                    std::cout<< "Route from: "<<terminal.IPAddress<<"back to router"<<endl;
+             */
+        // ##################### Routing implement ###########################################
+
+        IInterfaceTable *ift = IPvXAddressResolver().interfaceTableOf(terminal.module);
+        IRoutingTable* rt = IPvXAddressResolver().routingTableOf(terminal.module);
+
+        // count non-loopback interfaces
+        int numIntf = 0;
+        InterfaceEntry *ie = NULL;
+        for (int k=0; k<ift->getNumInterfaces(); k++)
+            if (!ift->getInterface(k)->isLoopback())
+                {ie = ift->getInterface(k); numIntf++;}
+
+        int i=0;
+        while (i<rt->getNumRoutes())
+        {
+            if (rt->getRoute(i)->getInterface()==ie)
+            {
+                rt->deleteRoute(rt->getRoute(i));
+                i=0;
+            }
+            else
+                i++;
+        }
+        IPv4Route *e = new IPv4Route();
+        e->setDestination(IPv4Address());
+        e->setNetmask(IPv4Address());
+        e->setInterface(terminal.interfaceTable->getInterfaceByName("wlan"));
+        e->setSource(IPv4Route::MANUAL);
+         //e->getMetric() = 1;
+        rt->addRoute(e);
+        // ###################################################################################
     }
 
 

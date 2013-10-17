@@ -28,6 +28,7 @@
 #include <math.h>
 #include <GlobalNodeList.h>
 #include <SimpleInfo.h>
+#include <ModuleAccess.h>
 
 Define_Module(DenaCastOverlay);
 
@@ -309,7 +310,13 @@ void DenaCastOverlay::finishOverlay()
 
 void DenaCastOverlay::setBandwidth()
 {
+
 	cModule* nodeModule = getParentModule()->getParentModule();
+
+	cModule * mobMod = findModuleWherever("mobility",nodeModule);
+	if (mobMod)
+	    return;
+
 	if(!nodeModule->hasGate("pppg$i"))  //if SimpleUderlay
 	{
 		upBandwidth = dynamic_cast<SimpleInfo*>(globalNodeList->getPeerInfo(thisNode))->getEntry()->getTxBandwidth();
